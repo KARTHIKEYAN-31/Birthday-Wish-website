@@ -1,4 +1,4 @@
-name: Deploy Lilac Pop-Up Fairytale App to GitHub Pages
+name: Deploy The Princess Chronicles App to GitHub Pages
 
 on:
   push:

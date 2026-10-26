@@ -1,6 +1,6 @@
-# Lilac Disney Princess Fairytale 3D Pop-Up Book 📖✨
+# The Princess Chronicles 📖✨
 
-An interactive, realistic 3D Disney Princess Storybook web app created as a birthday keepsake. Features friend birthday videos, Disney fairytale gold filigree leather binding, 3D paper-cutout origami pop-up scenes (Hot Air Balloon & Fairytale Castle), and support for **30+ friends' wishes**!
+An interactive, realistic 3D Princess Storybook web app created as a royal birthday keepsake. Features friend birthday videos, fairytale gold filigree leather binding, 3D paper-cutout origami pop-up scenes (Hot Air Balloon & Fairytale Castle), and support for **30+ friends' wishes**!
 
 ---
 

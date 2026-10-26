@@ -269,7 +269,7 @@ export default function FantasyFrontCover({ friendName }) {
       {/* ── Top Header Text ── */}
       <div className="relative z-20 pt-7">
         <p className="text-[10px] font-cinzel tracking-[.3em] text-amber-200/95 uppercase font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-          ✦ A DISNEY PRINCESS FAIRYTALE ✦
+          ✦ THE PRINCESS CHRONICLES ✦
         </p>
       </div>
 

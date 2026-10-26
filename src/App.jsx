@@ -78,10 +78,7 @@ export default function App() {
           </div>
           <div>
             <span className="font-cinzel font-bold text-xs sm:text-base text-amber-200 tracking-wider">
-              Lilac Princess Fairytale
-            </span>
-            <span className="hidden md:inline-block ml-2 text-[10px] font-sans px-2 py-0.5 rounded-full bg-purple-500/25 text-purple-200 border border-purple-400/40">
-              Disney Storybook 3D
+              The Princess Chronicles
             </span>
           </div>
         </div>
