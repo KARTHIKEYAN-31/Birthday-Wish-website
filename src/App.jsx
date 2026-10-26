@@ -106,8 +106,7 @@ export default function App() {
 
       {/* ── Footer ───────────────────────────────────────── */}
       <footer className="relative z-10 py-1 text-center text-[8.5px] sm:text-[10px] text-purple-300/70 font-sans border-t border-purple-900/40 backdrop-blur-xs shrink-0">
-        Handcrafted with ♥ for {friendName} • Lilac Disney Princess Storybook Experience
-      </footer>
+        Handcrafted with ♥ for {friendName} </footer>
 
       {/* ── Information Modal ───────────────────────────────────────── */}
       {showInfo && (
