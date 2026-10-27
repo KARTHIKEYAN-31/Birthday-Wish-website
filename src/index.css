@@ -141,6 +141,18 @@
   50% { background-position: 100% 50%; }
 }
 
+@keyframes sparkleGlint {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(0.65) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2) rotate(45deg);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 8px rgba(254, 240, 138, 0.8));
+  }
+}
+
 /* ── Gilded Page Edges ────────────────────────────── */
 .page-edges-gilded-right {
   background: repeating-linear-gradient(to bottom,

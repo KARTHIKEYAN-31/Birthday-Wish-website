@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Crown, RotateCcw } from 'lucide-react';
+import PrincessCrown from './PrincessCrown';
 import { BOOK_DATA } from '../config/data';
 
 /*
@@ -178,13 +179,8 @@ export default function DisneyFairytaleBackCover({ onReplay }) {
         {/* Ornate Princess Polaroid Card */}
         <div className="relative bg-gradient-to-b from-stone-50 to-purple-50/40 p-3 pb-5 rounded-xs shadow-2xl border-2 border-amber-300/80 transform -rotate-1 hover:rotate-0 transition-transform duration-300 max-w-[230px] filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.85)]">
           {/* Princess Tiara at Top of Polaroid */}
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 filter drop-shadow-md">
-            <svg width="40" height="20" viewBox="0 0 60 30" fill="none">
-              <path d="M10 24 Q20 12 30 2 Q40 12 50 24 Z" fill="url(#disneyGoldBack)" stroke="#78350f" strokeWidth="1" />
-              <circle cx="30" cy="4" r="2.5" fill="#fde047" />
-              <circle cx="20" cy="14" r="1.8" fill="#ef4444" />
-              <circle cx="40" cy="14" r="1.8" fill="#3b82f6" />
-            </svg>
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 filter drop-shadow-md z-20">
+            <PrincessCrown className="w-16 h-auto" />
           </div>
 
           {/* Photo */}

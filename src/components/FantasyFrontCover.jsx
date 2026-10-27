@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Crown } from 'lucide-react';
+import PrincessCrown from './PrincessCrown';
 
 /*
  * FantasyFrontCover:
@@ -275,29 +276,9 @@ export default function FantasyFrontCover({ friendName }) {
 
       {/* ── Centerpiece: Disney Fairytale Calligraphy & Princess Emblem ── */}
       <div className="relative z-20 my-auto flex flex-col items-center max-w-[280px]">
-        {/* Sculpted Golden Princess Tiara Crown */}
-        <div className="filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.85)] mb-2">
-          <svg width="74" height="42" viewBox="0 0 80 46" fill="none">
-            {/* Crown Base */}
-            <path d="M12 36 Q40 40 68 36 L66 42 Q40 46 14 42 Z" fill="url(#disneyGold)" stroke="#78350f" strokeWidth="1" />
-            <circle cx="24" cy="39" r="1.8" fill="#ef4444" />
-            <circle cx="40" cy="41" r="2.2" fill="#3b82f6" />
-            <circle cx="56" cy="39" r="1.8" fill="#ef4444" />
-
-            {/* Tiara Arches */}
-            <path
-              d="M12 36 Q22 20 28 34 Q34 10 40 2 Q46 10 52 34 Q58 20 68 36 Z"
-              fill="url(#disneyGold)"
-              stroke="#78350f"
-              strokeWidth="1.4"
-            />
-            {/* Crown Jewels */}
-            <circle cx="40" cy="4" r="3.2" fill="#fde047" stroke="#ca8a04" strokeWidth="1" />
-            <circle cx="28" cy="18" r="2.2" fill="#fde047" stroke="#ca8a04" strokeWidth="0.8" />
-            <circle cx="52" cy="18" r="2.2" fill="#fde047" stroke="#ca8a04" strokeWidth="0.8" />
-            <circle cx="16" cy="24" r="1.8" fill="#fde047" />
-            <circle cx="64" cy="24" r="1.8" fill="#fde047" />
-          </svg>
+        {/* Sculpted Golden Princess Tiara Crown (Faithful to user reference) */}
+        <div className="mb-2 w-full flex justify-center">
+          <PrincessCrown className="w-44 sm:w-52 h-auto" />
         </div>
 
         {/* Fairytale Title Inscription */}
