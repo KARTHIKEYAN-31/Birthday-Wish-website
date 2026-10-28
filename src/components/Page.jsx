@@ -10,33 +10,72 @@ export default function Page({
   contentVisible = true,
 }) {
   if (!friendData) return null;
+  const isSingle = position === 'single';
   const isLeft = position === 'left';
 
   return (
-    <div style={{ transformStyle: 'flat' }} className={`relative w-full h-full flex flex-col justify-between parchment-lilac overflow-hidden ${
-      isLeft ? 'pr-5 pl-7 md:pl-9 border-r border-purple-200/50' : 'pl-5 pr-7 md:pr-9 border-l border-purple-200/50'
-    } py-5 md:py-6 select-none`}>
-
+    <div 
+      style={{ transformStyle: 'flat' }} 
+      className={`relative w-full h-full flex flex-col justify-between parchment-lilac overflow-hidden ${
+        isSingle
+          ? 'px-5 sm:px-7 border border-purple-200/50 rounded-lg'
+          : isLeft 
+            ? 'pr-5 pl-7 md:pl-9 border-r border-purple-200/50' 
+            : 'pl-5 pr-7 md:pr-9 border-l border-purple-200/50'
+      } py-4 md:py-6 select-none`}
+    >
       {/* Crease Gutter Shadows */}
-      <div className={`absolute top-0 bottom-0 w-16 pointer-events-none z-10 ${
-        isLeft ? 'right-0 gutter-shadow-right' : 'left-0 gutter-shadow-left'
-      }`} />
+      {!isSingle && (
+        <div className={`absolute top-0 bottom-0 w-16 pointer-events-none z-10 ${
+          isLeft ? 'right-0 gutter-shadow-right' : 'left-0 gutter-shadow-left'
+        }`} />
+      )}
+      {isSingle && (
+        <div className="absolute top-0 bottom-0 left-0 w-3 gutter-shadow-left pointer-events-none z-10 opacity-20" />
+      )}
 
       {/* Ornate Lilac & Gold Floral Corners */}
-      <div className={`absolute top-2 ${isLeft ? 'left-2' : 'right-2'} text-purple-400/50 pointer-events-none ${!isLeft ? 'scale-x-[-1]' : ''}`}>
-        <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-          <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
-          <path d="M9 32 V15 C9 11 11 9 15 9 H32" stroke="currentColor" strokeWidth="1" />
-          <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
-        </svg>
-      </div>
+      {/* Top Left */}
+      {(isSingle || isLeft) && (
+        <div className="absolute top-2 left-2 text-purple-400/50 pointer-events-none">
+          <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+            <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M9 32 V15 C9 11 11 9 15 9 H32" stroke="currentColor" strokeWidth="1" />
+            <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
+          </svg>
+        </div>
+      )}
 
-      <div className={`absolute bottom-2 ${isLeft ? 'left-2' : 'right-2'} text-purple-400/50 pointer-events-none ${!isLeft ? 'scale-x-[-1] scale-y-[-1]' : 'scale-y-[-1]'}`}>
-        <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-          <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
-          <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
-        </svg>
-      </div>
+      {/* Top Right */}
+      {(isSingle || !isLeft) && (
+        <div className="absolute top-2 right-2 text-purple-400/50 pointer-events-none scale-x-[-1]">
+          <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+            <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M9 32 V15 C9 11 11 9 15 9 H32" stroke="currentColor" strokeWidth="1" />
+            <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
+          </svg>
+        </div>
+      )}
+
+      {/* Bottom Left */}
+      {(isSingle || isLeft) && (
+        <div className="absolute bottom-2 left-2 text-purple-400/50 pointer-events-none scale-y-[-1]">
+          <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+            <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
+            <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
+          </svg>
+        </div>
+      )}
+
+      {/* Bottom Right */}
+      {(isSingle || !isLeft) && (
+        <div className="absolute bottom-2 right-2 text-purple-400/50 pointer-events-none scale-x-[-1] scale-y-[-1]">
+          <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+            <path d="M4 36 V12 C4 7 7 4 12 4 H36" stroke="currentColor" strokeWidth="1.8" />
+            <circle cx="16" cy="16" r="2.5" fill="#c084fc" />
+          </svg>
+        </div>
+      )}
 
       {/* ── Inner Content (Disappears before close, appears after open) ── */}
       <motion.div
@@ -111,7 +150,7 @@ export default function Page({
             <span>Fairytale Chronicle</span>
           </div>
           <span className="font-bold tracking-widest">
-            {isLeft ? '✦' : ''} Page {pageNumber} {!isLeft ? '✦' : ''}
+            {isSingle ? '✦' : (isLeft ? '✦' : '')} Page {pageNumber} {isSingle ? '✦' : (!isLeft ? '✦' : '')}
           </span>
         </div>
       </motion.div>
