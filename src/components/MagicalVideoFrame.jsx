@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Sparkles, Crown } from 'lucide-react';
+import { Play, Pause, Sparkles, Crown } from 'lucide-react';
 
 export default function MagicalVideoFrame({
   driveFileId,
@@ -8,54 +8,77 @@ export default function MagicalVideoFrame({
   role,
   orientation = 'horizontal',
 }) {
-  const containerRef = useRef(null);
+  const videoRef = useRef(null);
   const isVertical = orientation === 'vertical';
 
-  // Calibrated initial scale factors (horizontal ~0.45, vertical ~0.71)
-  const [scale, setScale] = useState(isVertical ? 0.708 : 0.4515);
-  const [isPlayingFallback, setIsPlayingFallback] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const hasValidDriveId = Boolean(driveFileId && driveFileId.trim() && !driveFileId.includes('example'));
   const isPlaceholder = !hasValidDriveId;
 
-  const driveEmbedUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/preview` : '';
+  // Direct MP4 stream URL from Google Drive with CORS & Range header support
+  const directStreamUrl = hasValidDriveId
+    ? `https://drive.usercontent.google.com/download?id=${driveFileId}&export=download&confirm=t`
+    : (fallbackVideo || '');
+
   const driveDirectUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/view?usp=sharing` : '';
 
-  // Dynamically compute the exact scale factor:
-  // - For Horizontal (16:9): scale = width / 640. The 640x360 iframe fills the 16:9 container.
-  // - For Vertical (9:16): scale = height / 360. In Google Drive's 640x360 player, a 9:16 vertical
-  //   video is 360px tall and 202.5px wide centered at x=320. By scaling to height / 360 and centering at 50%,
-  //   the vertical video fills the 9:16 portrait container 100%, cropping out the black side pillarboxes!
+  // Reset playback state if the video changes
   useEffect(() => {
-    if (!containerRef.current) return;
+    setIsPlaying(false);
+    setHasStarted(false);
+    setProgress(0);
+    setIsBuffering(false);
+  }, [directStreamUrl]);
 
-    const updateScale = () => {
-      if (containerRef.current) {
-        const w = containerRef.current.clientWidth;
-        const h = containerRef.current.clientHeight;
-        if (isVertical) {
-          if (h > 0) {
-            setScale(h / 360);
-          }
-        } else {
-          if (w > 0) {
-            setScale(w / 640);
-          }
+  // Clean up audio/video immediately when navigating away or unmounting
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        try {
+          videoRef.current.pause();
+          videoRef.current.removeAttribute('src');
+          videoRef.current.load();
+        } catch {
+          // ignore cleanup errors
         }
       }
     };
+  }, []);
 
-    updateScale();
-    const ro = new ResizeObserver(updateScale);
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, [isVertical]);
+  // Toggle Play / Resume / Pause cleanly without any third-party UI overlays, menus or mobile blackouts
+  const togglePlay = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+            setHasStarted(true);
+          })
+          .catch((err) => {
+            console.warn('HTML5 direct playback catch:', err);
+          });
+      }
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
 
   return (
     <div 
       onClick={(e) => e.stopPropagation()}
-      className={`relative group mx-auto my-1 transition-all duration-300 ${
+      className={`relative group mx-auto my-1 transition-all duration-300 touch-manipulation ${
         isVertical ? 'w-full max-w-[190px]' : 'w-full my-2'
       }`}
     >
@@ -88,72 +111,120 @@ export default function MagicalVideoFrame({
           >
             {/* Video Container (16:9 for landscape, 9:16 for portrait) */}
             <div 
-              ref={containerRef}
-              className={`relative w-full rounded-sm overflow-hidden bg-black flex items-center justify-center ${
+              onClick={hasValidDriveId ? togglePlay : undefined}
+              className={`relative w-full rounded-sm overflow-hidden bg-black flex items-center justify-center cursor-pointer select-none touch-manipulation ${
                 isVertical ? 'aspect-[9/16] max-h-[255px]' : 'aspect-video'
               }`}
             >
-              {!isPlaceholder && !hasError ? (
-                /* Scaled 640x360 desktop canvas perfectly centered in the container */
-                <div
-                  style={{
-                    width: '640px',
-                    height: '360px',
-                    transform: `translate(-50%, -50%) scale(${scale})`,
-                    transformOrigin: 'center center',
-                    left: '50%',
-                    top: '50%',
-                  }}
-                  className="absolute pointer-events-auto"
-                >
-                  <iframe
-                    src={driveEmbedUrl}
-                    title={`${friendName}'s birthday video`}
-                    className="w-full h-full border-0 block"
-                    allow="autoplay; encrypted-media; fullscreen"
-                    allowFullScreen
-                    onError={() => setHasError(true)}
-                  />
-                </div>
-              ) : (
-                /* Fallback / Interactive Demo Player */
-                <div className="w-full h-full bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 flex flex-col items-center justify-center p-2 text-center">
-                  {fallbackVideo && isPlayingFallback ? (
-                    <video 
-                      src={fallbackVideo} 
-                      controls 
-                      autoPlay 
-                      className="w-full h-full object-cover rounded-sm" 
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center space-y-1.5">
-                      {fallbackVideo ? (
-                        <button
-                          onClick={() => setIsPlayingFallback(true)}
-                          className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-300 via-purple-300 to-amber-400 flex items-center justify-center shadow-[0_0_15px_rgba(216,180,254,0.8)] hover:scale-110 transition-transform cursor-pointer"
-                          title="Click to play sample video"
-                        >
-                          <Play className="w-4 h-4 ml-0.5 fill-purple-950 text-purple-950" />
-                        </button>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-300/30 via-purple-300/30 to-amber-400/30 border border-amber-300/50 flex items-center justify-center shadow-[0_0_15px_rgba(216,180,254,0.4)]">
-                          <Sparkles className="w-4 h-4 text-amber-200" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-xs font-cinzel font-bold text-amber-200 tracking-wide">
-                          {friendName}'s Wish
-                        </p>
-                        <p className="text-[9px] text-purple-200/80 font-sans">
-                          {hasValidDriveId
-                            ? "Click to view video"
-                            : fallbackVideo
-                              ? "Sample Video Ready • Click Play"
-                              : "Video Arriving Soon ✨"}
-                        </p>
+              {/* 1. NATIVE HTML5 VIDEO STREAM: No mobile blackout, pure Play & Resume controls */}
+              {!isPlaceholder && (
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    playsInline
+                    webkit-playsinline="true"
+                    x5-playsinline="true"
+                    preload="metadata"
+                    controls={false}
+                    disablePictureInPicture
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    onTimeUpdate={() => {
+                      if (videoRef.current && videoRef.current.duration) {
+                        setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+                      }
+                    }}
+                    onWaiting={() => setIsBuffering(true)}
+                    onPlaying={() => {
+                      setIsBuffering(false);
+                      setIsPlaying(true);
+                      setHasStarted(true);
+                    }}
+                    onPlay={() => {
+                      setIsPlaying(true);
+                      setHasStarted(true);
+                    }}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => {
+                      setIsPlaying(false);
+                      setHasStarted(false);
+                      setProgress(0);
+                    }}
+                    className={`w-full h-full ${isVertical ? 'object-cover' : 'object-contain'} bg-black pointer-events-none`}
+                  >
+                    <source src={directStreamUrl} type="video/mp4" />
+                  </video>
+
+                  {/* Buffering Sparkle Spinner */}
+                  {isBuffering && isPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-15 bg-black/25">
+                      <div className="w-8 h-8 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
+                    </div>
+                  )}
+
+                  {/* Clean Fairytale Play & Resume Overlay (Appears ONLY when paused or not started) */}
+                  {!isPlaying && (
+                    <div 
+                      onClick={togglePlay}
+                      className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex flex-col items-center justify-center transition-all z-20 cursor-pointer"
+                    >
+                      <button
+                        type="button"
+                        onClick={togglePlay}
+                        className="w-13 h-13 rounded-full bg-gradient-to-tr from-amber-300 via-pink-300 to-amber-400 flex items-center justify-center shadow-[0_0_24px_rgba(251,191,36,0.95)] hover:scale-110 active:scale-95 transition-transform cursor-pointer border-2 border-amber-100"
+                        title={hasStarted ? 'Resume Video' : 'Play Video'}
+                      >
+                        <Play className="w-5 h-5 ml-0.5 fill-purple-950 text-purple-950" />
+                      </button>
+                      <div className="mt-2.5 px-3 py-1 rounded-full bg-purple-950/85 border border-amber-300/40 shadow-sm flex items-center space-x-1">
+                        <Sparkles className="w-3 h-3 text-amber-300" />
+                        <span className="text-[11px] font-cinzel font-bold text-amber-200 tracking-wider">
+                          {hasStarted ? 'Resume' : 'Play'}
+                        </span>
                       </div>
                     </div>
                   )}
+
+                  {/* Discreet Floating Pause Button (Only when playing) */}
+                  {isPlaying && (
+                    <button
+                      type="button"
+                      onClick={togglePlay}
+                      className="absolute bottom-2.5 right-2.5 z-20 px-2 py-1 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-sm border border-amber-300/60 shadow-md flex items-center space-x-1 text-amber-200 hover:text-white transition-all cursor-pointer"
+                      title="Pause Video"
+                    >
+                      <Pause className="w-3 h-3 fill-amber-300 text-amber-300" />
+                      <span className="text-[9px] font-cinzel font-semibold tracking-wide">Pause</span>
+                    </button>
+                  )}
+
+                  {/* Slim Golden Progress Indicator */}
+                  {hasStarted && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50 pointer-events-none z-10">
+                      <div 
+                        style={{ width: `${progress}%` }} 
+                        className="h-full bg-gradient-to-r from-amber-300 via-pink-400 to-amber-300 transition-all duration-150"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. PLACEHOLDER / COMING SOON CARD (For Amma or pending entries) */}
+              {isPlaceholder && (
+                <div className="w-full h-full bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 flex flex-col items-center justify-center p-2 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-1.5">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-300/30 via-purple-300/30 to-amber-400/30 border border-amber-300/50 flex items-center justify-center shadow-[0_0_15px_rgba(216,180,254,0.4)]">
+                      <Sparkles className="w-4 h-4 text-amber-200" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-cinzel font-bold text-amber-200 tracking-wide">
+                        {friendName}'s Wish
+                      </p>
+                      <p className="text-[9px] text-purple-200/80 font-sans">
+                        Video Arriving Soon ✨
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -181,15 +252,6 @@ export default function MagicalVideoFrame({
               >
                 <span>Drive ↗</span>
               </a>
-            )}
-
-            {isPlaceholder && fallbackVideo && (
-              <button
-                onClick={() => setIsPlayingFallback(!isPlayingFallback)}
-                className="text-purple-950 font-sans font-bold text-[9px] underline hover:text-purple-800 shrink-0"
-              >
-                {isPlayingFallback ? 'Reset' : 'Play Sample'}
-              </button>
             )}
           </div>
         </div>
