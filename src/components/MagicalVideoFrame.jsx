@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Sparkles, Crown, Maximize2, X, ExternalLink } from 'lucide-react';
+import { Play, Sparkles, Crown, Maximize2, X, ExternalLink, Video } from 'lucide-react';
 
 export default function MagicalVideoFrame({
   driveFileId,
@@ -19,11 +19,20 @@ export default function MagicalVideoFrame({
   const [isTheaterOpen, setIsTheaterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Dual-mode player state:
+  // false = Clean Native HTML5 Player (direct stream with auto-hiding controls, zero Google Drive popups)
+  // true = Google Drive iframe embed (/preview fallback)
+  const [inlineUseIframe, setInlineUseIframe] = useState(false);
+  const [theaterUseIframe, setTheaterUseIframe] = useState(false);
+
   const hasValidDriveId = Boolean(driveFileId && driveFileId.trim() && !driveFileId.includes('example'));
   const isPlaceholder = !hasValidDriveId;
 
+  // Video URLs
   const driveEmbedUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/preview` : '';
   const driveDirectUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/view?usp=sharing` : '';
+  const directStreamUrl = hasValidDriveId ? `https://drive.google.com/uc?export=download&id=${driveFileId}` : '';
+  const directStreamUrlDocs = hasValidDriveId ? `https://docs.google.com/uc?export=download&id=${driveFileId}` : '';
 
   // Mobile detection
   useEffect(() => {
@@ -46,11 +55,7 @@ export default function MagicalVideoFrame({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTheaterOpen]);
 
-  // Dynamically compute the exact scale factor:
-  // - For Horizontal (16:9): scale = width / 640. The 640x360 iframe fills the 16:9 container.
-  // - For Vertical (9:16): scale = height / 360. In Google Drive's 640x360 player, a 9:16 vertical
-  //   video is 360px tall and 202.5px wide centered at x=320. By scaling to height / 360 and centering at 50%,
-  //   the vertical video fills the 9:16 portrait container 100%, cropping out the black side pillarboxes!
+  // Dynamically compute the exact scale factor for iframe fallback:
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -124,9 +129,28 @@ export default function MagicalVideoFrame({
               }}
             >
               {!isPlaceholder && !hasError ? (
-                /* On mobile horizontal videos, render direct 100% iframe to bypass nested transform matrices.
-                   On desktop or vertical videos, use scaled 640x360 canvas centered to crop side pillarboxes. */
-                isMobile && !isVertical ? (
+                /* Primary: Clean Native HTML5 Video Player (no Google Drive popups)
+                   Fallback: Google Drive iframe preview */
+                !inlineUseIframe ? (
+                  <video
+                    key={`inline-video-${driveFileId}`}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className={`w-full h-full ${isVertical ? 'object-cover' : 'object-contain'}`}
+                    style={{
+                      border: 'none',
+                      transformStyle: 'flat',
+                      WebkitBackfaceVisibility: 'visible',
+                      backfaceVisibility: 'visible',
+                    }}
+                    onError={() => setInlineUseIframe(true)}
+                  >
+                    <source src={directStreamUrl} type="video/mp4" />
+                    <source src={directStreamUrlDocs} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : isMobile && !isVertical ? (
                   <iframe
                     src={driveEmbedUrl}
                     title={`${friendName}'s birthday video`}
@@ -266,58 +290,71 @@ export default function MagicalVideoFrame({
         </div>
       </div>
 
-      {/* ── Enchanted Royal Theater Modal (Full Resolution, Zero Transforms) ── */}
+      {/* ── Enchanted Royal Theater Modal (Edge-to-Edge Immersive Mobile Theater) ── */}
       {isTheaterOpen && hasValidDriveId && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setIsTheaterOpen(false)}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-purple-950/90 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex flex-col justify-between p-2 sm:p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 select-none"
           style={{ transformStyle: 'flat' }}
         >
+          {/* Top Bar: Royal Title, Crown, and Close Button */}
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl rounded-2xl p-2.5 sm:p-3 shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-amber-300/80 animate-in zoom-in-95 duration-200"
-            style={{
-              background: 'linear-gradient(145deg, #fef08a 0%, #eab308 25%, #a855f7 60%, #ca8a04 100%)',
-            }}
+            className="flex items-center justify-between px-3 py-2 text-amber-200 max-w-3xl w-full mx-auto shrink-0 border-b border-amber-300/20"
           >
-            {/* Header: Royal Crown, Friend Name, and Close Button */}
-            <div className="flex items-center justify-between px-2 py-1.5 mb-1.5 text-purple-950">
-              <div className="flex items-center space-x-2 min-w-0">
-                <div className="p-1.5 rounded-full bg-purple-950 text-amber-300 shadow-sm shrink-0">
-                  <Crown className="w-3.5 h-3.5 fill-amber-300" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-cinzel font-black text-sm sm:text-base tracking-wide text-purple-950 truncate">
-                    {friendName}'s Birthday Wish
-                  </h3>
-                  <p className="text-[10px] sm:text-xs font-sans font-semibold text-purple-900 tracking-wider uppercase truncate">
-                    {role} • Royal Fairytale Theater
-                  </p>
-                </div>
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="p-1.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-300/40 shrink-0">
+                <Crown className="w-4 h-4 fill-amber-300" />
               </div>
-
-              <button
-                onClick={() => setIsTheaterOpen(false)}
-                className="p-1.5 rounded-full bg-purple-950/20 hover:bg-purple-950/40 text-purple-950 transition-colors cursor-pointer shrink-0 ml-2"
-                aria-label="Close Theater"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              <div className="min-w-0">
+                <h3 className="font-cinzel font-black text-sm sm:text-base tracking-wide text-amber-200 truncate">
+                  {friendName}'s Birthday Wish
+                </h3>
+                <p className="text-[10px] sm:text-xs font-sans text-purple-300 font-semibold uppercase tracking-wider truncate">
+                  {role} • Royal Fairytale Theater
+                </p>
+              </div>
             </div>
 
-            {/* Inner Velvet Stage Frame */}
-            <div 
-              className="p-1.5 sm:p-2 rounded-xl"
-              style={{ background: 'linear-gradient(145deg, #2e054f, #150226)' }}
+            <button
+              onClick={() => setIsTheaterOpen(false)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-amber-200 hover:text-white transition-colors cursor-pointer shrink-0 ml-2"
+              aria-label="Close Theater"
             >
-              <div 
-                className={`relative mx-auto rounded-lg overflow-hidden bg-black flex items-center justify-center ${
-                  isVertical 
-                    ? 'w-full max-w-[340px] aspect-[9/16] max-h-[70vh]' 
-                    : 'w-full aspect-video max-h-[70vh]'
-                }`}
-                style={{ isolation: 'isolate' }}
-              >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Center Stage: Fullscreen Edge-to-Edge Video Container */}
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 w-full max-w-3xl mx-auto flex items-center justify-center p-1 sm:p-2 min-h-0"
+          >
+            <div 
+              className={`relative rounded-xl overflow-hidden bg-black shadow-[0_0_60px_rgba(168,85,247,0.35)] border border-amber-300/40 flex items-center justify-center ${
+                isVertical 
+                  ? 'w-full max-w-[380px] h-full max-h-[78vh] aspect-[9/16]' 
+                  : 'w-full aspect-video max-h-[78vh]'
+              }`}
+              style={{ isolation: 'isolate' }}
+            >
+              {/* Primary: Clean Native HTML5 Player (auto-hiding controls, zero Google Drive popups)
+                 Fallback / Toggle: Google Drive iframe preview */}
+              {!theaterUseIframe ? (
+                <video
+                  key={`theater-video-${driveFileId}`}
+                  controls
+                  playsInline
+                  autoPlay
+                  preload="auto"
+                  className={`w-full h-full ${isVertical ? 'object-cover' : 'object-contain'}`}
+                  onError={() => setTheaterUseIframe(true)}
+                >
+                  <source src={directStreamUrl} type="video/mp4" />
+                  <source src={directStreamUrlDocs} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
                 <iframe
                   src={driveEmbedUrl}
                   title={`${friendName}'s birthday video (Royal Theater)`}
@@ -325,34 +362,51 @@ export default function MagicalVideoFrame({
                   allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write; accelerometer; gyroscope"
                   allowFullScreen
                 />
-              </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Bar: Player Mode Switcher, Open in App, Back to Book */}
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="flex flex-col sm:flex-row items-center justify-between gap-2 px-3 py-2 text-xs max-w-3xl w-full mx-auto shrink-0 border-t border-amber-300/20"
+          >
+            {/* Player Switcher */}
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => setTheaterUseIframe(!theaterUseIframe)}
+                className="px-2.5 py-1 rounded-full bg-purple-900/80 hover:bg-purple-800 text-amber-200 border border-amber-300/50 text-[10px] font-cinzel font-bold flex items-center space-x-1 transition-all cursor-pointer"
+                title="Toggle between Clean Native Player and Drive Player"
+              >
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>{theaterUseIframe ? "✨ Switch to Clean Player" : "🌐 Switch to Drive Embed"}</span>
+              </button>
+
+              <span className="text-[10px] text-purple-300/70 hidden sm:inline">
+                {!theaterUseIframe ? "Clean Player active (no popups)" : "Drive Embed active"}
+              </span>
             </div>
 
-            {/* Modal Footer Controls */}
-            <div className="mt-2 flex items-center justify-between px-2 text-xs">
-              <span className="text-[11px] font-cinzel font-bold text-purple-950 flex items-center space-x-1">
-                <Sparkles className="w-3 h-3 text-amber-800" />
-                <span>The Princess Chronicles</span>
-              </span>
+            {/* Actions */}
+            <div className="flex items-center space-x-2">
+              <a
+                href={driveDirectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 text-purple-950 font-cinzel font-bold text-[10px] flex items-center space-x-1 shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>Open in Drive App</span>
+                <ExternalLink className="w-3 h-3 ml-0.5" />
+              </a>
 
-              <div className="flex items-center space-x-2">
-                <a
-                  href={driveDirectUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-2.5 py-1 rounded-md bg-purple-950 text-amber-300 hover:bg-purple-900 font-cinzel font-bold text-[10px] flex items-center space-x-1 shadow-sm transition-colors"
-                >
-                  <span>Open in Drive</span>
-                  <ExternalLink className="w-3 h-3 ml-0.5" />
-                </a>
-
-                <button
-                  onClick={() => setIsTheaterOpen(false)}
-                  className="px-2.5 py-1 rounded-md bg-amber-200/90 hover:bg-amber-300 text-purple-950 font-cinzel font-bold text-[10px] shadow-sm transition-colors cursor-pointer"
-                >
-                  Return to Book
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsTheaterOpen(false)}
+                className="px-3 py-1 rounded-full bg-purple-900/90 hover:bg-purple-800 text-purple-200 font-cinzel font-bold text-[10px] border border-purple-600/50 shadow-sm transition-colors cursor-pointer"
+              >
+                Back to Book
+              </button>
             </div>
           </div>
         </div>,
