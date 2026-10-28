@@ -446,11 +446,38 @@ export default function Book({ friendName }) {
       ref={bookContainerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       className="flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-1 select-none"
     >
       {/* ── 3D Stage Container with Dynamic Responsive Mobile Scaling ── */}
+      {/* ── Outside-the-Book Side Navigation Arrows (Floating Chevrons) ── */}
+      <div className="absolute left-0 sm:left-2 md:-left-12 top-1/2 -translate-y-1/2 z-40">
+        <button
+          onClick={goToPrev}
+          disabled={!canGoPrev}
+          aria-label="Previous Page"
+          className={`p-2.5 sm:p-3 rounded-full bg-purple-950/85 hover:bg-purple-900 border border-amber-300/70 shadow-lg text-amber-200 hover:scale-110 active:scale-95 transition-all backdrop-blur-md cursor-pointer ${
+            canGoPrev ? "opacity-90 hover:opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          title="Previous Page"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      </div>
+
+      <div className="absolute right-0 sm:right-2 md:-right-12 top-1/2 -translate-y-1/2 z-40">
+        <button
+          onClick={goToNext}
+          disabled={!canGoNext}
+          aria-label="Next Page"
+          className={`p-2.5 sm:p-3 rounded-full bg-purple-950/85 hover:bg-purple-900 border border-amber-300/70 shadow-lg text-amber-200 hover:scale-110 active:scale-95 transition-all backdrop-blur-md cursor-pointer ${
+            canGoNext ? "opacity-90 hover:opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          title="Next Page"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      </div>
+
       <motion.div 
         className="book-stage flex items-center justify-center relative origin-center"
         style={{ minHeight: H + 20 }}
@@ -781,9 +808,7 @@ export default function Book({ friendName }) {
 
             {/* LEFT PAGE */}
             <div 
-              onClick={goToPrev}
-              className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg cursor-pointer"
-              title="Click or swipe to turn back"
+              className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg"
             >
               <Page 
                 pageNumber={activeSpreadData.leftPageNumber} 
@@ -795,9 +820,7 @@ export default function Book({ friendName }) {
 
             {/* RIGHT PAGE */}
             <div 
-              onClick={goToNext}
-              className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg cursor-pointer"
-              title="Click or swipe to turn forward"
+              className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg"
             >
               <Page 
                 pageNumber={activeSpreadData.rightPageNumber} 
@@ -809,7 +832,7 @@ export default function Book({ friendName }) {
 
             {/* ── 3D POP-UP ORIGAMI SCENES (Alternates between Balloon & Castle across spreads) ── */}
             <PopUpElement 
-              type={currentSpread % 2 === 1 ? 'balloon' : 'castle'} 
+              spreadIndex={currentSpread} 
               folded={!pageContentVisible || popupFolded} 
             />
 

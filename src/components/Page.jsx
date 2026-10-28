@@ -70,32 +70,37 @@ export default function Page({
           </div>
         </div>
 
-        {/* Center Content: Magical Video + Birthday Message */}
+        {/* Center Content: Magical Video + Birthday Message / Quote */}
         <div className="flex-1 flex flex-col justify-center space-y-2 max-w-xs mx-auto w-full">
           <MagicalVideoFrame
             driveFileId={friendData.driveFileId}
             fallbackVideo={friendData.fallbackVideo}
             friendName={friendData.name}
             role={friendData.role}
+            orientation={friendData.orientation}
           />
 
-          <div className="space-y-1.5">
-            {/* Friend's Letter */}
-            <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-200/80 shadow-xs">
-              <p className="text-xs md:text-sm font-serif text-purple-950 leading-relaxed text-center italic font-medium">
-                "{friendData.message}"
-              </p>
-            </div>
+          {(friendData.message || friendData.quote) && (
+            <div className="space-y-1.5">
+              {/* Friend's Letter (only rendered if provided) */}
+              {friendData.message && (
+                <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-200/80 shadow-xs">
+                  <p className="text-xs md:text-sm font-serif text-purple-950 leading-relaxed text-center italic font-medium">
+                    "{friendData.message}"
+                  </p>
+                </div>
+              )}
 
-            {/* Fairytale Quote Card */}
-            {friendData.quote && (
-              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-100/70 via-pink-50 to-purple-100/70 border-l-3 border-purple-500 text-center shadow-2xs">
-                <p className="text-[10px] md:text-[11px] font-cormorant text-purple-950 font-bold italic">
-                  {friendData.quote}
-                </p>
-              </div>
-            )}
-          </div>
+              {/* Fairytale Quote Card */}
+              {friendData.quote && (
+                <div className="p-2 rounded-lg bg-gradient-to-r from-purple-100/70 via-pink-50 to-purple-100/70 border-l-3 border-purple-500 text-center shadow-2xs">
+                  <p className="text-[10px] md:text-[11px] font-cormorant text-purple-950 font-bold italic">
+                    {friendData.quote}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer: Page Number & Direction */}

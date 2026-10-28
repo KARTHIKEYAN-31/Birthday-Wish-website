@@ -1,71 +1,127 @@
 // Configuration file for Lilac Fairytale Pop-Up Book
-// You can add as many friends as you want (4, 10, 30, 50+ friends)!
-// The book automatically creates dual-page spreads (2 friends per spread).
+// Supports dynamic friend profiles paired into dual-page spreads (2 friends per spread).
+
+import finalePhoto from '../assets/finale-photo.jpg';
 
 export const BOOK_DATA = {
   // Recipient details (The Birthday Star)
-  friendName: "Kavya Krishnakumar", // Change to the recipient's name
+  friendName: "Kavya Krishnakumar",
   subtitle: "A Fairytale Birthday Journey",
   birthdayDate: "October 2026",
 
   // =========================================================================
-  // FRIENDS' WISHES & PROFILES (Supports 30+ friends!)
-  // =========================================================================
-  // To add a new friend, simply copy a profile block and paste it below.
-  // Each friend gets their own page with:
-  // - name: Friend's Name
-  // - title: Their Fairytale Title (e.g. "The Radiant Voyager")
-  // - role: Friendship Role (e.g. "Cherished Friend", "Partner in Mischief")
-  // - driveFileId: Google Drive Video ID (see README for guide)
-  // - fallbackVideo: Sample video URL (works when testing or offline)
-  // - message: Heartfelt birthday letter/message
-  // - quote: Inspiring fairytale quote
-  // - badge: Chapter badge displayed on top of page
+  // FRIENDS' WISHES & PROFILES
   // =========================================================================
   pages: [
     {
       id: 1,
-      name: "Adhavan",
-      title: "The Radiant Voyager",
-      role: "Cherished Friend",
-      driveFileId: "1dQv6zJ_example_adhavan_id",
+      name: "Krishnakumar - Appa",
+      title: "The Guardian King Across the Seas",
+      role: "Loving Father & Royal Protector",
+      driveFileId: "1XXn9WgEvEhnPc5OP-UjONhq6MIjA8je2",
       fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      message: "May your journey ahead be as vast as the twilight sky and filled with stars that never stop shining for you. Keep lighting up every room you enter!",
-      quote: "“Spread your wings, for the world awaits the magic you carry.”",
-      badge: "Chapter I • Golden Dawn",
+      orientation: "vertical",
+      quote: "“No ocean is too vast, nor distance too far, to dim a father’s unconditional love for his cherished princess.”",
+      badge: "Chapter I • The King's Blessing",
     },
     {
       id: 2,
-      name: "John Sam",
-      title: "The Melodic Wanderer",
-      role: "Guardian of Smiles",
-      driveFileId: "1dQv6zJ_example_johnsam_id",
+      name: "Kalyani - Amma",
+      title: "The Queen of Whispered Dreams",
+      role: "Devoted Mother & Guiding Light",
+      driveFileId: "", // Kept blank as requested
       fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      message: "Another year of laughter, crazy memories, and endless dreams! Here's to more adventures, inside jokes, and celebrations that make our hearts sing.",
-      quote: "“May your year be scored with the sweetest symphonies of joy.”",
-      badge: "Chapter II • Starry Horizons",
+      orientation: "horizontal",
+      quote: "“A mother’s loving embrace is the enchanted sanctuary where all of a daughter’s dreams take flight.”",
+      badge: "Chapter II • A Mother's Haven",
     },
     {
       id: 3,
-      name: "PK",
-      title: "The Brave Dreamer",
-      role: "Partner in Mischief",
-      driveFileId: "1dQv6zJ_example_pk_id",
+      name: "Kaushik",
+      title: "The Valiant Shield & Brother",
+      role: "Younger Brother & Lifelong Partner",
+      driveFileId: "1aw1b9uqtP4agnOpzDSbGh5GuJ-Q2iiQf",
       fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-      message: "To the one who turns ordinary days into extraordinary fairytales! Never lose that spark and boundless courage that inspires everyone around you.",
-      quote: "“In every chapter of your story, you shine like gold.”",
-      badge: "Chapter III • Royal Citadel",
+      orientation: "vertical",
+      quote: "“From childhood adventures to forever dreams, a brother’s loyalty and love stand unwavering.”",
+      badge: "Chapter III • The Valiant Companion",
     },
     {
       id: 4,
-      name: "Karthikeyan",
-      title: "The Loyal Companion",
-      role: "Cherished Friend",
-      driveFileId: "1dQv6zJ_example_karthikeyan_id",
+      name: "Cherished Friend",
+      title: "The Starlight Wanderer",
+      role: "Beloved Companion",
+      driveFileId: "",
       fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
-      message: "May every path you take lead to wonderful discoveries and boundless happiness. Thank you for being such an extraordinary friend and bringing so much warmth to all of us!",
-      quote: "“True friendship is a golden thread that never fades with time.”",
-      badge: "Chapter IV • The Golden Thread",
+      orientation: "horizontal",
+      quote: "“Every great storybook holds magical chapters waiting to be written in golden ink.”",
+      badge: "Chapter IV • Whispering Stars",
+    },
+    {
+      id: 5,
+      name: "Cherished Friend",
+      title: "The Radiant Voyager",
+      role: "Treasured Friend",
+      driveFileId: "",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      orientation: "horizontal",
+      quote: "“True friendship is a golden thread woven across the tapestry of time.”",
+      badge: "Chapter V • Golden Echoes",
+    },
+    {
+      id: 6,
+      name: "Harithaa - Deepesh",
+      title: "The Enchanted Newlyweds",
+      role: "Best Friends & Newlywed Companions",
+      driveFileId: "1fg8CIa9ZpNV2FnseCQdAES6U7VGo4nHA",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      orientation: "horizontal",
+      quote: "“From dancing with pure joy at your wedding to celebrating every golden milestone, our bond dances on forever.”",
+      badge: "Chapter VI • Celebration of Love",
+    },
+    {
+      id: 7,
+      name: "Girls Trio - Harithaa, Deepika, Logi",
+      title: "The Unbreakable Sisterhood",
+      role: "College Besties & Lifelong Sisters",
+      driveFileId: "18pny_ithXIR_G7KjMPGt9nJXX6P7ssdM",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      orientation: "horizontal",
+      quote: "“We may quarrel and banter like playful storms, but in our hearts, we will never let each other fall.”",
+      badge: "Chapter VII • The Unbreakable Bond",
+    },
+    {
+      id: 8,
+      name: "The Boys - Maddy, Kaushik, Kamal, Deepesh, Ajay",
+      title: "The Royal Brigade of Buddies",
+      role: "The Boy Squad & Lifelong Buddies",
+      driveFileId: "1SwXx9uSboP36k7m-m08-eO0qZnEFm7gS",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
+      orientation: "horizontal",
+      quote: "“A princess needs no guard when she has a squad that treasures and respects her as their truest buddy.”",
+      badge: "Chapter VIII • The Royal Brigade",
+    },
+    {
+      id: 9,
+      name: "Dharshan- Adhi K7",
+      title: "The Guardians of Good Times",
+      role: "Cherished Friends & Companions",
+      driveFileId: "1aav0G95P5Zt8d1OaotZSFd9KqUHSscM2",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      orientation: "horizontal",
+      quote: "“Golden friends make every memory brighter and every chapter of life infinitely richer.”",
+      badge: "Chapter IX • Starlight Companions",
+    },
+    {
+      id: 10,
+      name: "The Kingdom of Friends",
+      title: "The Eternal Fairytale",
+      role: "All Your Loving Family & Friends",
+      driveFileId: "",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      orientation: "horizontal",
+      quote: "“And so the adventure continues, surrounded by the loving hearts that cherish you most in this world.”",
+      badge: "Chapter X • Eternal Fairytale",
     },
   ],
 
@@ -74,13 +130,13 @@ export const BOOK_DATA = {
   // =========================================================================
   finale: {
     title: "Forever Our Fairytale Princess",
-    subtext: "Crafted with love by all your treasured friends",
-    polaroidCaption: "Treasured Moments • Happy Birthday!",
-    // Polaroid photo URL - can be an online link or a local asset in /src/assets/
-    polaroidImage: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80",
+    subtext: "Crafted with love by all your treasured friends & family",
+    polaroidCaption: "Treasured Moments • Happy Birthday Kavya!",
+    // Local bundled asset - 100% reliable, zero 403 blocks, works on GitHub Pages & offline
+    polaroidImage: finalePhoto,
     wishes: [
       "May each day bring you closer to your wildest dreams.",
-      "Surrounded by friends who will always cheer you on.",
+      "Surrounded by family and friends who will always cheer you on.",
       "Stay as radiant, kind, and wonderful as you are today!"
     ]
   }
