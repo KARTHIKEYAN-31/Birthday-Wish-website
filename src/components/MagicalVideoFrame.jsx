@@ -3,26 +3,17 @@ import { createPortal } from 'react-dom';
 import { Play, Sparkles, Crown, Maximize2, X, ExternalLink } from 'lucide-react';
 
 /*
- * MagicalVideoFrame — Dual-strategy Google Drive video embedding:
+ * MagicalVideoFrame — Responsive Google Drive video embedding:
  *
- * INLINE (small frame inside page):
- *   Uses the "Desktop Override" technique:
- *   - The iframe is rendered at a fixed LARGE size (e.g. 1200×675px) so that
- *     Google Drive's player thinks it is on a desktop browser with a wide viewport.
- *   - At narrow/wide viewport, Google Drive renders its DESKTOP player
- *     (small, auto-hiding controls — no giant touch buttons).
- *   - The outer container has `overflow: hidden` and uses CSS `transform: scale()`
- *     to shrink the visually large iframe into the small visible frame.
- *   - A transparent pointer-events overlay on top BLOCKS touch input to the iframe
- *     so tapping on the inline frame never shows the Drive player controls.
- *   - A prominent "▶ Tap to Watch" button sits over the inline frame; tapping
- *     opens the Royal Theater modal instead.
+ * DESKTOP (≥ 768px) — inline playback:
+ *   The iframe renders at a fixed large size (IFRAME_W × IFRAME_H) so Google Drive
+ *   shows its compact desktop player UI. CSS transform: scale() shrinks it to fit
+ *   the book page frame. Pointer-events are ENABLED so the user can play inline.
  *
- * ROYAL THEATER MODAL (full-screen portal):
- *   - Portalled to document.body (completely outside all 3D-transform contexts).
- *   - Full-screen black backdrop, edge-to-edge.
- *   - The iframe is rendered at natural 100%×100% with no CSS transforms.
- *   - User can interact fully with the Drive player in this context.
+ * MOBILE (< 768px) — tap-to-theater:
+ *   Same scaled iframe but pointer-events are BLOCKED. A "▶ Tap to Watch" overlay
+ *   opens the Royal Theater modal (portalled to document.body) where the video plays
+ *   at desktop-scaled size without giant mobile controls.
  */
 
 const IFRAME_W = 1200; // Inline preview: force desktop UI, no touch controls
@@ -40,6 +31,16 @@ export default function MagicalVideoFrame({
 }) {
   const isVertical = orientation === 'vertical';
   const [isTheaterOpen, setIsTheaterOpen] = useState(false);
+
+  // ── Responsive: mobile vs desktop ─────────────────────────────────
+  // Mobile → tap-to-theater popup. Desktop → play inline in book.
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // ── Inline frame sizing ────────────────────────────────────────────
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
@@ -160,7 +161,9 @@ export default function MagicalVideoFrame({
                       height: IFRAME_H,
                       transform: `translate(-50%, -50%) scale(${scale})`,
                       transformOrigin: 'center center',
-                      pointerEvents: 'none', // Block all touch — user must use the tap overlay
+                      // Mobile: block all touch so controls never appear (user uses theater popup).
+                      // Desktop: allow pointer events so the video plays inline.
+                      pointerEvents: isMobile ? 'none' : 'auto',
                     }}
                   >
                     <iframe
@@ -174,23 +177,25 @@ export default function MagicalVideoFrame({
                     />
                   </div>
 
-                  {/* ── Tap-to-Watch Overlay ── */}
-                  <button
-                    type="button"
-                    onClick={() => setIsTheaterOpen(true)}
-                    className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/30 hover:bg-black/40 active:bg-black/50 transition-colors group/play cursor-pointer"
-                    aria-label="Open full view"
-                  >
-                    {/* Animated play ring */}
-                    <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-amber-300/70 flex items-center justify-center shadow-[0_0_20px_rgba(253,224,71,0.5)] group-hover/play:scale-110 group-hover/play:border-amber-300 transition-all duration-200">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-purple-300 to-amber-400 flex items-center justify-center shadow-lg">
-                        <Play className="w-5 h-5 ml-0.5 fill-purple-950 text-purple-950" />
+                  {/* ── Tap-to-Watch Overlay — mobile only ── */}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={() => setIsTheaterOpen(true)}
+                      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/30 hover:bg-black/40 active:bg-black/50 transition-colors group/play cursor-pointer"
+                      aria-label="Open full view"
+                    >
+                      {/* Animated play ring */}
+                      <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-amber-300/70 flex items-center justify-center shadow-[0_0_20px_rgba(253,224,71,0.5)] group-hover/play:scale-110 group-hover/play:border-amber-300 transition-all duration-200">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-purple-300 to-amber-400 flex items-center justify-center shadow-lg">
+                          <Play className="w-5 h-5 ml-0.5 fill-purple-950 text-purple-950" />
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-[10px] font-cinzel font-bold text-amber-200 tracking-widest uppercase drop-shadow-md">
-                      Tap to Watch
-                    </span>
-                  </button>
+                      <span className="text-[10px] font-cinzel font-bold text-amber-200 tracking-widest uppercase drop-shadow-md">
+                        Tap to Watch
+                      </span>
+                    </button>
+                  )}
                 </>
               ) : (
                 /* Placeholder / fallback */
@@ -219,6 +224,7 @@ export default function MagicalVideoFrame({
                   type="button"
                   onClick={() => setIsTheaterOpen(true)}
                   className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 hover:from-amber-300 hover:to-amber-400 text-purple-950 px-1.5 py-0.5 rounded text-[9px] font-cinzel font-bold flex items-center gap-0.5 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+                  title="Expand to Theater View"
                 >
                   <Maximize2 className="w-2.5 h-2.5" />
                   <span>Full View</span>
