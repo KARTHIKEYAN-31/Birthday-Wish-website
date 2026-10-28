@@ -574,8 +574,8 @@ export default function Book({ friendName }) {
         {/* ========================================================================= */}
         {transitionPhase === 'swinging-open' && (
           <div 
-            className="relative preserve-3d book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
-            style={{ width: W * 2, height: H }}
+            className="relative book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
+            style={{ width: W * 2, height: H, transformStyle: 'flat' }}
           >
             <div className="absolute inset-0 leather-lilac rounded-xl pointer-events-none -m-2 z-0" />
             <div className="absolute left-1/2 top-0 bottom-0 w-14 -translate-x-1/2 spine-center-shadow z-20 pointer-events-none" />
@@ -644,8 +644,8 @@ export default function Book({ friendName }) {
         {/* ========================================================================= */}
         {transitionPhase === 'swinging-closed' && (
           <div 
-            className="relative preserve-3d book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
-            style={{ width: W * 2, height: H }}
+            className="relative book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
+            style={{ width: W * 2, height: H, transformStyle: 'flat' }}
           >
             <div className="absolute inset-0 leather-lilac rounded-xl pointer-events-none -m-2 z-0" />
             <div className="absolute left-1/2 top-0 bottom-0 w-14 -translate-x-1/2 spine-center-shadow z-20 pointer-events-none" />
@@ -690,8 +690,8 @@ export default function Book({ friendName }) {
         {/* ========================================================================= */}
         {transitionPhase === 'closing-to-finale' && (
           <div 
-            className="relative preserve-3d book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
-            style={{ width: W * 2, height: H }}
+            className="relative book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
+            style={{ width: W * 2, height: H, transformStyle: 'flat' }}
           >
             <div className="absolute inset-0 leather-lilac rounded-xl pointer-events-none -m-2 z-0" />
             <div className="absolute left-1/2 top-0 bottom-0 w-14 -translate-x-1/2 spine-center-shadow z-20 pointer-events-none" />
@@ -736,8 +736,8 @@ export default function Book({ friendName }) {
         {/* ========================================================================= */}
         {transitionPhase === 'opening-from-finale' && (
           <div 
-            className="relative preserve-3d book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
-            style={{ width: W * 2, height: H }}
+            className="relative book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
+            style={{ width: W * 2, height: H, transformStyle: 'flat' }}
           >
             <div className="absolute inset-0 leather-lilac rounded-xl pointer-events-none -m-2 z-0" />
             <div className="absolute left-1/2 top-0 bottom-0 w-14 -translate-x-1/2 spine-center-shadow z-20 pointer-events-none" />
@@ -783,8 +783,8 @@ export default function Book({ friendName }) {
         {currentSpread >= 1 && currentSpread <= totalPageSpreads && 
           transitionPhase === 'idle' && (
           <div
-            className="relative preserve-3d book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
-            style={{ width: W * 2, height: H }}
+            className="relative book-ambient-shadow rounded-xl flex items-center justify-center border-4 border-amber-300/80"
+            style={{ width: W * 2, height: H, transformStyle: 'flat' }}
           >
             {/* Hardcover Outer Leather Lip */}
             <div className="absolute inset-0 leather-lilac rounded-xl pointer-events-none -m-2 z-0" />
@@ -808,7 +808,7 @@ export default function Book({ friendName }) {
 
             {/* LEFT PAGE */}
             <div 
-              className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg"
+              className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg" style={{ transformStyle: 'flat' }}
             >
               <Page 
                 pageNumber={activeSpreadData.leftPageNumber} 
@@ -820,7 +820,7 @@ export default function Book({ friendName }) {
 
             {/* RIGHT PAGE */}
             <div 
-              className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg"
+              className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg" style={{ transformStyle: 'flat' }}
             >
               <Page 
                 pageNumber={activeSpreadData.rightPageNumber} 

@@ -13,7 +13,7 @@ export default function Page({
   const isLeft = position === 'left';
 
   return (
-    <div className={`relative w-full h-full flex flex-col justify-between parchment-lilac overflow-hidden ${
+    <div style={{ transformStyle: 'flat' }} className={`relative w-full h-full flex flex-col justify-between parchment-lilac overflow-hidden ${
       isLeft ? 'pr-5 pl-7 md:pl-9 border-r border-purple-200/50' : 'pl-5 pr-7 md:pr-9 border-l border-purple-200/50'
     } py-5 md:py-6 select-none`}>
 
@@ -40,6 +40,7 @@ export default function Page({
 
       {/* ── Inner Content (Disappears before close, appears after open) ── */}
       <motion.div
+        style={{ transformStyle: 'flat' }}
         className="relative z-20 w-full h-full flex flex-col justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: contentVisible ? 1 : 0 }}
