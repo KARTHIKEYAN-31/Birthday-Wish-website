@@ -25,8 +25,11 @@ import { Play, Sparkles, Crown, Maximize2, X, ExternalLink } from 'lucide-react'
  *   - User can interact fully with the Drive player in this context.
  */
 
-const IFRAME_W = 1200; // Force desktop width — prevents mobile touch UI
+const IFRAME_W = 1200; // Inline preview: force desktop UI, no touch controls
 const IFRAME_H = 675;  // 16:9 ratio
+
+const THEATER_W = 900; // Theater modal: still desktop mode but proportional controls
+const THEATER_H = 506; // 16:9 ratio (900 × 9/16)
 
 export default function MagicalVideoFrame({
   driveFileId,
@@ -37,8 +40,14 @@ export default function MagicalVideoFrame({
 }) {
   const isVertical = orientation === 'vertical';
   const [isTheaterOpen, setIsTheaterOpen] = useState(false);
+
+  // ── Inline frame sizing ────────────────────────────────────────────
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const containerRef = React.useRef(null);
+
+  // ── Theater frame sizing ───────────────────────────────────────────
+  const [theaterSize, setTheaterSize] = useState({ w: 0, h: 0 });
+  const theaterContainerRef = React.useRef(null);
 
   const hasValidDriveId = Boolean(
     driveFileId && driveFileId.trim() && !driveFileId.includes('example')
@@ -62,6 +71,26 @@ export default function MagicalVideoFrame({
     return () => ro.disconnect();
   }, []);
 
+  // Measure theater container (portalled, so observe after modal opens)
+  useEffect(() => {
+    if (!isTheaterOpen) return;
+    let ro;
+    // rAF: wait one paint cycle for the portal to mount in the DOM
+    const raf = requestAnimationFrame(() => {
+      if (theaterContainerRef.current) {
+        ro = new ResizeObserver(([entry]) => {
+          const { width, height } = entry.contentRect;
+          setTheaterSize({ w: width, h: height });
+        });
+        ro.observe(theaterContainerRef.current);
+      }
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+    };
+  }, [isTheaterOpen]);
+
   // Close theater modal on Escape
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') setIsTheaterOpen(false); };
@@ -77,6 +106,15 @@ export default function MagicalVideoFrame({
   // Use the smaller scale so nothing is clipped (fit, not fill).
   // For vertical we want fill (bigger scale) so the video fills the portrait box.
   const scale = isVertical ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
+
+  // Same desktop-override technique for the Theater modal.
+  // THEATER_W×THEATER_H renders Google Drive in desktop mode; we scale to fit
+  // the modal container while keeping pointer-events active for interaction.
+  const theaterScaleX = theaterSize.w > 0 ? theaterSize.w / THEATER_W : 1;
+  const theaterScaleY = theaterSize.h > 0 ? theaterSize.h / THEATER_H : 1;
+  const theaterScale = isVertical
+    ? Math.max(theaterScaleX, theaterScaleY) // fill portrait box
+    : Math.min(theaterScaleX, theaterScaleY); // fit landscape box
 
   return (
     <div
@@ -242,32 +280,49 @@ export default function MagicalVideoFrame({
             onClick={(e) => e.stopPropagation()}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', minHeight: 0 }}
           >
+            {/*
+              Theater clip box — the same desktop-override technique as inline.
+              THEATER_W×THEATER_H forces Google Drive to render its desktop player
+              (small, proportional controls). CSS scale shrinks it to fit the modal.
+              pointer-events are ENABLED here so the user can interact.
+            */}
             <div
+              ref={theaterContainerRef}
               style={{
                 width: isVertical ? 'min(85vw, 340px)' : '100%',
                 maxWidth: isVertical ? 340 : 900,
                 aspectRatio: isVertical ? '9/16' : '16/9',
                 maxHeight: isVertical ? '78vh' : '75vh',
                 position: 'relative',
-                borderRadius: 12,
                 overflow: 'hidden',
+                borderRadius: 12,
                 background: '#000',
                 boxShadow: '0 0 60px rgba(168,85,247,0.4)',
                 border: '1px solid rgba(251,191,36,0.35)',
               }}
             >
-              {/* 
-                In the modal, we render the iframe at FULL natural size.
-                NO scale transforms. NO pointer-events blocking.
-                Google Drive's player works perfectly here.
-              */}
-              <iframe
-                src={driveEmbedUrl}
-                title={`${friendName}'s Birthday Wish – Full Screen`}
-                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                allowFullScreen
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }}
-              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: THEATER_W,
+                  height: THEATER_H,
+                  transform: `translate(-50%, -50%) scale(${theaterSize.w > 0 ? theaterScale : 1})`,
+                  transformOrigin: 'center center',
+                  // pointer-events intentionally left as default (auto) so user can interact
+                }}
+              >
+                <iframe
+                  src={driveEmbedUrl}
+                  title={`${friendName}'s Birthday Wish – Full Screen`}
+                  width={THEATER_W}
+                  height={THEATER_H}
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  style={{ border: 'none', display: 'block', width: '100%', height: '100%' }}
+                />
+              </div>
             </div>
           </div>
 
