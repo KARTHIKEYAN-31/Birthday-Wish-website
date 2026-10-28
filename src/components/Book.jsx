@@ -441,6 +441,19 @@ export default function Book({ friendName }) {
     executeSpreadTransition(targetSpread, dir);
   };
 
+  // Helper to navigate on clicking page regions (excluding interactive buttons/videos)
+  const handlePageClickNavigation = (e, targetDirection) => {
+    // If click originated from interactive elements (buttons, links, inputs), do not turn page
+    if (e.target.closest('button, a, input, select, textarea, [data-prevent-nav]')) {
+      return;
+    }
+    if (targetDirection === 'next') {
+      goToNext();
+    } else if (targetDirection === 'prev') {
+      goToPrev();
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handler = (e) => {
@@ -584,7 +597,18 @@ export default function Book({ friendName }) {
                 />
 
                 {/* Single Page Wrapper with Smooth Slide/Fade Animation */}
-                <div className="relative w-full h-full z-10 overflow-hidden rounded-lg">
+                <div 
+                  className="relative w-full h-full z-10 overflow-hidden rounded-lg cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    if (clickX < rect.width / 2) {
+                      handlePageClickNavigation(e, 'prev');
+                    } else {
+                      handlePageClickNavigation(e, 'next');
+                    }
+                  }}
+                >
                   <AnimatePresence mode="wait" custom={mobileDirection}>
                     <motion.div
                       key={`single-page-${currentMobilePage}`}
@@ -875,7 +899,11 @@ export default function Book({ friendName }) {
                 />
 
                 {/* LEFT PAGE */}
-                <div className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg" style={{ transformStyle: 'flat' }}>
+                <div 
+                  className="relative w-1/2 h-full z-10 overflow-hidden rounded-l-lg cursor-pointer" 
+                  style={{ transformStyle: 'flat' }}
+                  onClick={(e) => handlePageClickNavigation(e, 'prev')}
+                >
                   <Page 
                     pageNumber={activeSpreadData.leftPageNumber} 
                     position="left" 
@@ -885,7 +913,11 @@ export default function Book({ friendName }) {
                 </div>
 
                 {/* RIGHT PAGE */}
-                <div className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg" style={{ transformStyle: 'flat' }}>
+                <div 
+                  className="relative w-1/2 h-full z-10 overflow-hidden rounded-r-lg cursor-pointer" 
+                  style={{ transformStyle: 'flat' }}
+                  onClick={(e) => handlePageClickNavigation(e, 'next')}
+                >
                   <Page 
                     pageNumber={activeSpreadData.rightPageNumber} 
                     position="right" 
