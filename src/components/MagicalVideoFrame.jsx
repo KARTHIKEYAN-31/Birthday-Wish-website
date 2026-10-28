@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Sparkles, Crown, Maximize2, X, ExternalLink, Video } from 'lucide-react';
+import { Play, Sparkles, Crown, Maximize2, X, ExternalLink } from 'lucide-react';
 
 export default function MagicalVideoFrame({
   driveFileId,
@@ -9,40 +9,16 @@ export default function MagicalVideoFrame({
   role,
   orientation = 'horizontal',
 }) {
-  const containerRef = useRef(null);
   const isVertical = orientation === 'vertical';
-
-  // Calibrated initial scale factors (horizontal ~0.45, vertical ~0.71)
-  const [scale, setScale] = useState(isVertical ? 0.708 : 0.4515);
   const [isPlayingFallback, setIsPlayingFallback] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const [isTheaterOpen, setIsTheaterOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Dual-mode player state:
-  // false = Clean Native HTML5 Player (direct stream with auto-hiding controls, zero Google Drive popups)
-  // true = Google Drive iframe embed (/preview fallback)
-  const [inlineUseIframe, setInlineUseIframe] = useState(false);
-  const [theaterUseIframe, setTheaterUseIframe] = useState(false);
 
   const hasValidDriveId = Boolean(driveFileId && driveFileId.trim() && !driveFileId.includes('example'));
   const isPlaceholder = !hasValidDriveId;
 
-  // Video URLs
+  // Google Drive Embed URL
   const driveEmbedUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/preview` : '';
   const driveDirectUrl = hasValidDriveId ? `https://drive.google.com/file/d/${driveFileId}/view?usp=sharing` : '';
-  const directStreamUrl = hasValidDriveId ? `https://drive.google.com/uc?export=download&id=${driveFileId}` : '';
-  const directStreamUrlDocs = hasValidDriveId ? `https://docs.google.com/uc?export=download&id=${driveFileId}` : '';
-
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Close theater modal on Escape key
   useEffect(() => {
@@ -54,32 +30,6 @@ export default function MagicalVideoFrame({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTheaterOpen]);
-
-  // Dynamically compute the exact scale factor for iframe fallback:
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const updateScale = () => {
-      if (containerRef.current) {
-        const w = containerRef.current.clientWidth;
-        const h = containerRef.current.clientHeight;
-        if (isVertical) {
-          if (h > 0) {
-            setScale(h / 360);
-          }
-        } else {
-          if (w > 0) {
-            setScale(w / 640);
-          }
-        }
-      }
-    };
-
-    updateScale();
-    const ro = new ResizeObserver(updateScale);
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, [isVertical]);
 
   return (
     <div 
@@ -117,7 +67,6 @@ export default function MagicalVideoFrame({
           >
             {/* Video Container (16:9 for landscape, 9:16 for portrait) */}
             <div 
-              ref={containerRef}
               className={`relative w-full rounded-sm overflow-hidden bg-black flex items-center justify-center ${
                 isVertical ? 'aspect-[9/16] max-h-[255px]' : 'aspect-video'
               }`}
@@ -128,76 +77,39 @@ export default function MagicalVideoFrame({
                 backfaceVisibility: 'visible',
               }}
             >
-              {!isPlaceholder && !hasError ? (
-                /* Primary: Clean Native HTML5 Video Player (no Google Drive popups)
-                   Fallback: Google Drive iframe preview */
-                !inlineUseIframe ? (
-                  <video
-                    key={`inline-video-${driveFileId}`}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className={`w-full h-full ${isVertical ? 'object-cover' : 'object-contain'}`}
-                    style={{
-                      border: 'none',
-                      transformStyle: 'flat',
-                      WebkitBackfaceVisibility: 'visible',
-                      backfaceVisibility: 'visible',
-                    }}
-                    onError={() => setInlineUseIframe(true)}
-                  >
-                    <source src={directStreamUrl} type="video/mp4" />
-                    <source src={directStreamUrlDocs} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : isMobile && !isVertical ? (
+              {!isPlaceholder ? (
+                /* Google Drive Embed with Header Crop (-48px shifts the top bar and popout out of view) */
+                <div 
+                  className="absolute inset-0 overflow-hidden pointer-events-auto"
+                  style={{ isolation: 'isolate' }}
+                >
                   <iframe
                     src={driveEmbedUrl}
                     title={`${friendName}'s birthday video`}
-                    className="w-full h-full border-0 block"
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write; accelerometer; gyroscope"
+                    style={
+                      isVertical
+                        ? {
+                            position: 'absolute',
+                            top: '-48px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            height: 'calc(100% + 48px)',
+                            width: 'calc((100% + 48px) * 16 / 9)',
+                            border: 'none',
+                          }
+                        : {
+                            position: 'absolute',
+                            top: '-48px',
+                            left: '0',
+                            width: '100%',
+                            height: 'calc(100% + 48px)',
+                            border: 'none',
+                          }
+                    }
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
-                    style={{
-                      border: 'none',
-                      transformStyle: 'flat',
-                      WebkitBackfaceVisibility: 'visible',
-                      backfaceVisibility: 'visible',
-                    }}
-                    onError={() => setHasError(true)}
                   />
-                ) : (
-                  <div
-                    style={{
-                      width: '640px',
-                      height: '360px',
-                      transform: `translate(-50%, -50%) scale(${scale}) translateZ(0)`,
-                      WebkitTransform: `translate(-50%, -50%) scale(${scale}) translateZ(0)`,
-                      transformOrigin: 'center center',
-                      left: '50%',
-                      top: '50%',
-                      transformStyle: 'flat',
-                      WebkitBackfaceVisibility: 'visible',
-                      backfaceVisibility: 'visible',
-                      willChange: 'transform',
-                    }}
-                    className="absolute pointer-events-auto"
-                  >
-                    <iframe
-                      src={driveEmbedUrl}
-                      title={`${friendName}'s birthday video`}
-                      className="w-full h-full border-0 block"
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write; accelerometer; gyroscope"
-                      allowFullScreen
-                      style={{
-                        border: 'none',
-                        transformStyle: 'flat',
-                        WebkitBackfaceVisibility: 'visible',
-                        backfaceVisibility: 'visible',
-                      }}
-                      onError={() => setHasError(true)}
-                    />
-                  </div>
-                )
+                </div>
               ) : (
                 /* Fallback / Interactive Demo Player */
                 <div className="w-full h-full bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 flex flex-col items-center justify-center p-2 text-center">
@@ -239,9 +151,6 @@ export default function MagicalVideoFrame({
                   )}
                 </div>
               )}
-
-              {/* Shimmer Vignette (hidden on mobile to prevent hardware video surface clipping) */}
-              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_15px_rgba(0,0,0,0.65)] rounded-sm hidden md:block" />
             </div>
           </div>
         </div>
@@ -290,7 +199,7 @@ export default function MagicalVideoFrame({
         </div>
       </div>
 
-      {/* ── Enchanted Royal Theater Modal (Edge-to-Edge Immersive Mobile Theater) ── */}
+      {/* ── Enchanted Royal Theater Modal (Full Resolution, Cropped Clean View) ── */}
       {isTheaterOpen && hasValidDriveId && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setIsTheaterOpen(false)}
@@ -334,67 +243,55 @@ export default function MagicalVideoFrame({
               className={`relative rounded-xl overflow-hidden bg-black shadow-[0_0_60px_rgba(168,85,247,0.35)] border border-amber-300/40 flex items-center justify-center ${
                 isVertical 
                   ? 'w-full max-w-[380px] h-full max-h-[78vh] aspect-[9/16]' 
-                  : 'w-full aspect-video max-h-[78vh]'
+                  : 'w-full aspect-video max-h-[75vh]'
               }`}
               style={{ isolation: 'isolate' }}
             >
-              {/* Primary: Clean Native HTML5 Player (auto-hiding controls, zero Google Drive popups)
-                 Fallback / Toggle: Google Drive iframe preview */}
-              {!theaterUseIframe ? (
-                <video
-                  key={`theater-video-${driveFileId}`}
-                  controls
-                  playsInline
-                  autoPlay
-                  preload="auto"
-                  className={`w-full h-full ${isVertical ? 'object-cover' : 'object-contain'}`}
-                  onError={() => setTheaterUseIframe(true)}
-                >
-                  <source src={directStreamUrl} type="video/mp4" />
-                  <source src={directStreamUrlDocs} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <iframe
-                  src={driveEmbedUrl}
-                  title={`${friendName}'s birthday video (Royal Theater)`}
-                  className="w-full h-full border-0 block"
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write; accelerometer; gyroscope"
-                  allowFullScreen
-                />
-              )}
+              <iframe
+                src={driveEmbedUrl}
+                title={`${friendName}'s birthday video (Royal Theater)`}
+                style={
+                  isVertical
+                    ? {
+                        position: 'absolute',
+                        top: '-50px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        height: 'calc(100% + 50px)',
+                        width: 'calc((100% + 50px) * 16 / 9)',
+                        border: 'none',
+                      }
+                    : {
+                        position: 'absolute',
+                        top: '-50px',
+                        left: '0',
+                        width: '100%',
+                        height: 'calc(100% + 50px)',
+                        border: 'none',
+                      }
+                }
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           </div>
 
-          {/* Bottom Bar: Player Mode Switcher, Open in App, Back to Book */}
+          {/* Bottom Bar: Direct App Link & Back to Book */}
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="flex flex-col sm:flex-row items-center justify-between gap-2 px-3 py-2 text-xs max-w-3xl w-full mx-auto shrink-0 border-t border-amber-300/20"
+            className="flex items-center justify-between gap-2 px-3 py-2 text-xs max-w-3xl w-full mx-auto shrink-0 border-t border-amber-300/20"
           >
-            {/* Player Switcher */}
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => setTheaterUseIframe(!theaterUseIframe)}
-                className="px-2.5 py-1 rounded-full bg-purple-900/80 hover:bg-purple-800 text-amber-200 border border-amber-300/50 text-[10px] font-cinzel font-bold flex items-center space-x-1 transition-all cursor-pointer"
-                title="Toggle between Clean Native Player and Drive Player"
-              >
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>{theaterUseIframe ? "✨ Switch to Clean Player" : "🌐 Switch to Drive Embed"}</span>
-              </button>
-
-              <span className="text-[10px] text-purple-300/70 hidden sm:inline">
-                {!theaterUseIframe ? "Clean Player active (no popups)" : "Drive Embed active"}
-              </span>
+            <div className="flex items-center space-x-1.5 text-amber-200/80">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span className="text-[11px] font-cinzel font-bold">The Princess Chronicles</span>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center space-x-2">
               <a
                 href={driveDirectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 text-purple-950 font-cinzel font-bold text-[10px] flex items-center space-x-1 shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 text-purple-950 font-cinzel font-bold text-[10px] flex items-center space-x-1 shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span>Open in Drive App</span>
                 <ExternalLink className="w-3 h-3 ml-0.5" />
@@ -403,7 +300,7 @@ export default function MagicalVideoFrame({
               <button
                 type="button"
                 onClick={() => setIsTheaterOpen(false)}
-                className="px-3 py-1 rounded-full bg-purple-900/90 hover:bg-purple-800 text-purple-200 font-cinzel font-bold text-[10px] border border-purple-600/50 shadow-sm transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-full bg-purple-900/90 hover:bg-purple-800 text-purple-200 font-cinzel font-bold text-[10px] border border-purple-600/50 shadow-sm transition-colors cursor-pointer"
               >
                 Back to Book
               </button>
