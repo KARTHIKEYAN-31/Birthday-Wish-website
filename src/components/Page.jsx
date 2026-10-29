@@ -118,6 +118,7 @@ export default function Page({
             friendName={friendData.name}
             role={friendData.role}
             orientation={friendData.orientation}
+            contentVisible={contentVisible}
           />
 
           {(friendData.message || friendData.quote) && (

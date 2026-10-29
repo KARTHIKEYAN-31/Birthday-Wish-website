@@ -49,7 +49,7 @@ const STARS = [
   { id: 24, top: '93%', left: '91%', size: 10, type: 'dot', dur: 2.6, delay: 1.7, color: '#fbcfe8' },
 ];
 
-export default function FairytaleSkyBackground() {
+function FairytaleSkyBackground() {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
 
@@ -322,3 +322,5 @@ export default function FairytaleSkyBackground() {
     </div>
   );
 }
+
+export default React.memo(FairytaleSkyBackground);

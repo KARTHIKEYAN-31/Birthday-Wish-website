@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Book from './components/Book';
 import FairytaleSkyBackground from './components/FairytaleSkyBackground';
 import { BOOK_DATA } from './config/data';
@@ -15,15 +15,15 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
 
-  // Floating magical fairytale dust motes
-  const dust = Array.from({ length: 24 }, (_, i) => ({
+  // Floating magical fairytale dust motes (memoized to avoid regenerating on state toggles)
+  const dust = useMemo(() => Array.from({ length: 24 }, (_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     dur: Math.random() * 12 + 10,
     delay: Math.random() * 8,
     size: Math.random() * 3 + 2,
     opacity: Math.random() * 0.45 + 0.25,
-  }));
+  })), []);
 
   const toggleMute = () => { 
     setIsMuted(sound.toggleMute()); 
@@ -106,7 +106,8 @@ export default function App() {
 
       {/* ── Footer ───────────────────────────────────────── */}
       <footer className="relative z-10 py-1 text-center text-[8.5px] sm:text-[10px] text-purple-300/70 font-sans border-t border-purple-900/40 backdrop-blur-xs shrink-0">
-        Handcrafted with ♥ for {friendName} </footer>
+        Handcrafted with ♥ for {friendName}
+      </footer>
 
       {/* ── Information Modal ───────────────────────────────────────── */}
       {showInfo && (

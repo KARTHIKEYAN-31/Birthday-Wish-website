@@ -187,7 +187,7 @@ export default function DisneyFairytaleBackCover({ onReplay }) {
           <div className="w-full aspect-[4/3] rounded-xs bg-purple-100 overflow-hidden shadow-inner border border-purple-200">
             <img
               src={finale.polaroidImage}
-              alt="Treasured Moments"
+              alt="Treasured Moments" loading="lazy" decoding="async"
               className="w-full h-full object-cover"
             />
           </div>

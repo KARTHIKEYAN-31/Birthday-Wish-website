@@ -29,10 +29,10 @@ export const BOOK_DATA = {
       name: "Kalyani - Amma",
       title: "The Queen of Whispered Dreams",
       role: "Devoted Mother & Guiding Light",
-      driveFileId: "", // Kept blank as requested
+      driveFileId: "145RPxqTYn7NxTPzz7jKEFfQvwx74JjaO", 
       fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      orientation: "horizontal",
-      quote: "“A mother’s loving embrace is the enchanted sanctuary where all of a daughter’s dreams take flight.”",
+      orientation: "vertical",
+      quote: "“A mother's loving embrace is the enchanted sanctuary where all of a daughter’s dreams take flight.”",
       badge: "Chapter II • A Mother's Haven",
     },
     {

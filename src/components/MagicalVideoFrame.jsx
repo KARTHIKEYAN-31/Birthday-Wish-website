@@ -28,9 +28,12 @@ export default function MagicalVideoFrame({
   role,
   fallbackVideo,
   orientation = 'horizontal',
+  contentVisible = true,
 }) {
   const isVertical = orientation === 'vertical';
   const [isTheaterOpen, setIsTheaterOpen] = useState(false);
+  const [shouldLoadIframe, setShouldLoadIframe] = useState(contentVisible);
+  useEffect(() => { if (contentVisible) setShouldLoadIframe(true); }, [contentVisible]);
 
   // ── Responsive: mobile vs desktop ─────────────────────────────────
   // Mobile → tap-to-theater popup. Desktop → play inline in book.
@@ -166,15 +169,18 @@ export default function MagicalVideoFrame({
                       pointerEvents: isMobile ? 'none' : 'auto',
                     }}
                   >
-                    <iframe
-                      src={driveEmbedUrl}
-                      title={`${friendName}'s birthday video`}
-                      width={IFRAME_W}
-                      height={IFRAME_H}
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      style={{ border: 'none', display: 'block', width: '100%', height: '100%' }}
-                    />
+                    {shouldLoadIframe && (
+                      <iframe
+                        src={driveEmbedUrl}
+                        title={`${friendName}'s birthday video`}
+                        width={IFRAME_W}
+                        height={IFRAME_H}
+                        loading="lazy"
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        style={{ border: 'none', display: 'block', width: '100%', height: '100%' }}
+                      />
+                    )}
                   </div>
 
                   {/* ── Tap-to-Watch Overlay — mobile only ── */}
