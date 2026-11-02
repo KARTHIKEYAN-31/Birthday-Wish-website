@@ -443,6 +443,7 @@ export default function Book({ friendName }) {
 
   // Helper to navigate on clicking page regions (excluding interactive buttons/videos)
   const handlePageClickNavigation = (e, targetDirection) => {
+    if (isSwipingRef.current) return;
     // If click originated from interactive elements (buttons, links, inputs), do not turn page
     if (e.target.closest('button, a, input, select, textarea, [data-prevent-nav]')) {
       return;
@@ -463,6 +464,51 @@ export default function Book({ friendName }) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [goToNext, goToPrev]);
+
+  // ── Mobile Swipe Gesture Navigation ──────────────────────────
+  const touchStartRef = useRef(null);
+  const touchStartTimeRef = useRef(0);
+  const isSwipingRef = useRef(false);
+
+  const handleTouchStart = useCallback((e) => {
+    if (!isMobile) return;
+    // Don't capture swipe if touching interactive elements or form controls
+    if (e.target.closest('button, a, input, select, textarea, [data-prevent-nav]')) return;
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+    touchStartTimeRef.current = Date.now();
+  }, [isMobile]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!isMobile || !touchStartRef.current) return;
+    const touchEnd = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY,
+    };
+    const dx = touchEnd.x - touchStartRef.current.x;
+    const dy = touchEnd.y - touchStartRef.current.y;
+    const elapsed = Date.now() - touchStartTimeRef.current;
+    touchStartRef.current = null;
+
+    const MIN_SWIPE_DISTANCE = 40; // minimum horizontal px to trigger swipe
+    // Valid horizontal swipe: distance > 40px, mostly horizontal (1.2x vertical), and quick (< 600ms)
+    if (Math.abs(dx) > MIN_SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.2 && elapsed < 600) {
+      isSwipingRef.current = true;
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 250);
+
+      if (dx < 0) {
+        // Swiped Left -> Move to Next Page
+        goToNext();
+      } else {
+        // Swiped Right -> Move to Previous Page
+        goToPrev();
+      }
+    }
+  }, [isMobile, goToNext, goToPrev]);
 
   // Confetti burst on finale
   useEffect(() => {
@@ -545,12 +591,17 @@ export default function Book({ friendName }) {
         {/* MOBILE VIEW: SHOW EXACTLY ONE PAGE AT A TIME                              */}
         {/* ========================================================================= */}
         {isMobile ? (
-          <div className="relative flex items-center justify-center" style={{ width: W, height: H }}>
+          <div
+            className="relative flex items-center justify-center select-none"
+            style={{ width: W, height: H, touchAction: 'pan-y' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {/* Mobile Cover (Page 0) */}
             {currentMobilePage === 0 && (
               <motion.div
                 key="mobile-cover"
-                onClick={goToNext}
+                onClick={() => { if (isSwipingRef.current) return; goToNext(); }}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
