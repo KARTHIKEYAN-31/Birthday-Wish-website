@@ -1,26 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Play, Sparkles, Crown, Maximize2, X, ExternalLink } from 'lucide-react';
+import { Sparkles, Crown, Minimize2, Maximize2, ExternalLink } from 'lucide-react';
 
 /*
  * MagicalVideoFrame — Responsive Google Drive video embedding:
  *
- * DESKTOP (≥ 768px) — inline playback:
+ * DESKTOP (>= 768px) — inline playback:
  *   The iframe renders at a fixed large size (IFRAME_W × IFRAME_H) so Google Drive
  *   shows its compact desktop player UI. CSS transform: scale() shrinks it to fit
  *   the book page frame. Pointer-events are ENABLED so the user can play inline.
  *
- * MOBILE (< 768px) — tap-to-theater:
- *   Same scaled iframe but pointer-events are BLOCKED. A "▶ Tap to Watch" overlay
- *   opens the Royal Theater modal (portalled to document.body) where the video plays
- *   at desktop-scaled size without giant mobile controls.
+ * MOBILE (< 768px) — inline playback (same as desktop):
+ *   The video plays directly inside the same frame space on the page.
+ *   A "Full View" button expands the video to fill the page area in-place
+ *   (no separate popup/modal). Tap again to shrink back.
  */
 
 const IFRAME_W = 1200; // Inline preview: force desktop UI, no touch controls
 const IFRAME_H = 675;  // 16:9 ratio
-
-const THEATER_W = 900; // Theater modal: still desktop mode but proportional controls
-const THEATER_H = 506; // 16:9 ratio (900 × 9/16)
 
 export default function MagicalVideoFrame({
   driveFileId,
@@ -31,12 +27,11 @@ export default function MagicalVideoFrame({
   contentVisible = true,
 }) {
   const isVertical = orientation === 'vertical';
-  const [isTheaterOpen, setIsTheaterOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [shouldLoadIframe, setShouldLoadIframe] = useState(contentVisible);
   useEffect(() => { if (contentVisible) setShouldLoadIframe(true); }, [contentVisible]);
 
   // ── Responsive: mobile vs desktop ─────────────────────────────────
-  // Mobile → tap-to-theater popup. Desktop → play inline in book.
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -48,10 +43,6 @@ export default function MagicalVideoFrame({
   // ── Inline frame sizing ────────────────────────────────────────────
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const containerRef = React.useRef(null);
-
-  // ── Theater frame sizing ───────────────────────────────────────────
-  const [theaterSize, setTheaterSize] = useState({ w: 0, h: 0 });
-  const theaterContainerRef = React.useRef(null);
 
   const hasValidDriveId = Boolean(
     driveFileId && driveFileId.trim() && !driveFileId.includes('example')
@@ -75,33 +66,6 @@ export default function MagicalVideoFrame({
     return () => ro.disconnect();
   }, []);
 
-  // Measure theater container (portalled, so observe after modal opens)
-  useEffect(() => {
-    if (!isTheaterOpen) return;
-    let ro;
-    // rAF: wait one paint cycle for the portal to mount in the DOM
-    const raf = requestAnimationFrame(() => {
-      if (theaterContainerRef.current) {
-        ro = new ResizeObserver(([entry]) => {
-          const { width, height } = entry.contentRect;
-          setTheaterSize({ w: width, h: height });
-        });
-        ro.observe(theaterContainerRef.current);
-      }
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-      ro?.disconnect();
-    };
-  }, [isTheaterOpen]);
-
-  // Close theater modal on Escape
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setIsTheaterOpen(false); };
-    if (isTheaterOpen) window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isTheaterOpen]);
-
   // Scale so the IFRAME_W×IFRAME_H box fits inside the visible container.
   // For vertical videos the iframe is still landscape (IFRAME_W×IFRAME_H)
   // but we want its visible portion to fit a portrait box.
@@ -111,46 +75,107 @@ export default function MagicalVideoFrame({
   // For vertical we want fill (bigger scale) so the video fills the portrait box.
   const scale = isVertical ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
 
-  // Same desktop-override technique for the Theater modal.
-  // THEATER_W×THEATER_H renders Google Drive in desktop mode; we scale to fit
-  // the modal container while keeping pointer-events active for interaction.
-  const theaterScaleX = theaterSize.w > 0 ? theaterSize.w / THEATER_W : 1;
-  const theaterScaleY = theaterSize.h > 0 ? theaterSize.h / THEATER_H : 1;
-  const theaterScale = isVertical
-    ? Math.max(theaterScaleX, theaterScaleY) // fill portrait box
-    : Math.min(theaterScaleX, theaterScaleY); // fit landscape box
-
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className={`relative mx-auto my-1 ${isVertical ? 'w-full max-w-[190px]' : 'w-full my-2'}`}
+      className={`relative mx-auto my-1 ${isVertical ? 'w-full max-w-[190px]' : 'w-full my-2'} ${isExpanded ? 'z-50' : ''}`}
+      style={isExpanded ? {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        maxWidth: '100%',
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'rgba(0,0,0,0.92)',
+        borderRadius: 12,
+        padding: 8,
+        zIndex: 50,
+      } : {}}
     >
+      {/* ── Expanded mode header (mobile in-place full view) ─── */}
+      {isExpanded && (
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            width: '100%', padding: '6px 10px', marginBottom: 4, flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <Crown style={{ width: 14, height: 14, color: '#fbbf24', fill: '#fbbf24', flexShrink: 0 }} />
+            <span style={{
+              fontFamily: 'Cinzel, serif', fontWeight: 900, fontSize: 12, color: '#fde68a',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {friendName}'s Birthday Wish
+            </span>
+          </div>
+          <button
+            onClick={() => setIsExpanded(false)}
+            style={{
+              padding: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.12)',
+              border: 'none', cursor: 'pointer', color: '#fde68a', flexShrink: 0,
+              display: 'flex', alignItems: 'center',
+            }}
+            aria-label="Minimize"
+          >
+            <Minimize2 style={{ width: 16, height: 16 }} />
+          </button>
+        </div>
+      )}
+
       {/* ── Fairytale Gold & Lilac Frame ─────────────────────── */}
       <div
         className="relative p-2 rounded-xl shadow-[0_10px_25px_rgba(50,10,70,0.35)] border border-amber-300/70"
-        style={{ background: 'linear-gradient(145deg,#fef08a,#eab308 30%,#c084fc 60%,#ca8a04)' }}
+        style={{
+          background: 'linear-gradient(145deg,#fef08a,#eab308 30%,#c084fc 60%,#ca8a04)',
+          ...(isExpanded ? { flex: '1 1 auto', width: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' } : {}),
+        }}
       >
         {/* Crown Badge */}
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-          <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-300 via-purple-200 to-amber-300 border border-amber-400 shadow-sm flex items-center gap-1">
-            <Crown className="w-2.5 h-2.5 text-purple-900 fill-purple-900" />
-            <span className="text-[8px] font-cinzel font-bold text-purple-950 uppercase tracking-wider whitespace-nowrap">
-              {isVertical ? 'Royal Portrait' : 'Enchanted Message'}
-            </span>
+        {!isExpanded && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+            <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-300 via-purple-200 to-amber-300 border border-amber-400 shadow-sm flex items-center gap-1">
+              <Crown className="w-2.5 h-2.5 text-purple-900 fill-purple-900" />
+              <span className="text-[8px] font-cinzel font-bold text-purple-950 uppercase tracking-wider whitespace-nowrap">
+                {isVertical ? 'Royal Portrait' : 'Enchanted Message'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Velvet Mat */}
-        <div className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(145deg,#3b0764,#260542)' }}>
+        <div
+          className="p-1.5 rounded-lg"
+          style={{
+            background: 'linear-gradient(145deg,#3b0764,#260542)',
+            ...(isExpanded ? { flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' } : {}),
+          }}
+        >
           {/* Golden Border */}
-          <div className="p-[1.5px] rounded" style={{ background: 'linear-gradient(90deg,#fde047,#d8b4fe,#eab308)' }}>
+          <div
+            className="p-[1.5px] rounded"
+            style={{
+              background: 'linear-gradient(90deg,#fde047,#d8b4fe,#eab308)',
+              ...(isExpanded ? { flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' } : {}),
+            }}
+          >
 
             {/* ── Outer Clip Box — sets the VISIBLE size ────────── */}
             <div
               ref={containerRef}
               className={`relative rounded-sm overflow-hidden bg-black ${
-                isVertical ? 'aspect-[9/16] max-h-[255px] w-full' : 'aspect-video w-full'
+                isExpanded
+                  ? ''
+                  : isVertical ? 'aspect-[9/16] max-h-[255px] w-full' : 'aspect-video w-full'
               }`}
+              style={isExpanded ? { flex: '1 1 auto', width: '100%', minHeight: 0 } : {}}
             >
               {hasValidDriveId ? (
                 <>
@@ -164,9 +189,8 @@ export default function MagicalVideoFrame({
                       height: IFRAME_H,
                       transform: `translate(-50%, -50%) scale(${scale})`,
                       transformOrigin: 'center center',
-                      // Mobile: block all touch so controls never appear (user uses theater popup).
-                      // Desktop: allow pointer events so the video plays inline.
-                      pointerEvents: isMobile ? 'none' : 'auto',
+                      // Always allow pointer events — play inline on both mobile and desktop
+                      pointerEvents: 'auto',
                     }}
                   >
                     {shouldLoadIframe && (
@@ -182,26 +206,6 @@ export default function MagicalVideoFrame({
                       />
                     )}
                   </div>
-
-                  {/* ── Tap-to-Watch Overlay — mobile only ── */}
-                  {isMobile && (
-                    <button
-                      type="button"
-                      onClick={() => setIsTheaterOpen(true)}
-                      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/30 hover:bg-black/40 active:bg-black/50 transition-colors group/play cursor-pointer"
-                      aria-label="Open full view"
-                    >
-                      {/* Animated play ring */}
-                      <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-amber-300/70 flex items-center justify-center shadow-[0_0_20px_rgba(253,224,71,0.5)] group-hover/play:scale-110 group-hover/play:border-amber-300 transition-all duration-200">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-purple-300 to-amber-400 flex items-center justify-center shadow-lg">
-                          <Play className="w-5 h-5 ml-0.5 fill-purple-950 text-purple-950" />
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-cinzel font-bold text-amber-200 tracking-widest uppercase drop-shadow-md">
-                        Tap to Watch
-                      </span>
-                    </button>
-                  )}
                 </>
               ) : (
                 /* Placeholder / fallback */
@@ -218,7 +222,7 @@ export default function MagicalVideoFrame({
         </div>
 
         {/* Bottom label & actions */}
-        <div className="mt-1 flex items-center justify-between px-1 gap-1 text-[10px]">
+        <div className={`mt-1 flex items-center justify-between px-1 gap-1 text-[10px] ${isExpanded ? 'pb-0.5' : ''}`}>
           <span className="text-purple-950 font-cinzel font-bold tracking-wide flex items-center gap-1 min-w-0">
             <Sparkles className="w-2.5 h-2.5 text-amber-700 shrink-0" />
             <span className="truncate">{friendName} • <span className="font-sans text-[9px] font-semibold text-purple-900">{role}</span></span>
@@ -226,15 +230,26 @@ export default function MagicalVideoFrame({
           <div className="flex items-center gap-1 shrink-0">
             {hasValidDriveId && (
               <>
-                <button
-                  type="button"
-                  onClick={() => setIsTheaterOpen(true)}
-                  className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 hover:from-amber-300 hover:to-amber-400 text-purple-950 px-1.5 py-0.5 rounded text-[9px] font-cinzel font-bold flex items-center gap-0.5 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
-                  title="Expand to Theater View"
-                >
-                  <Maximize2 className="w-2.5 h-2.5" />
-                  <span>Full View</span>
-                </button>
+                {isMobile && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 hover:from-amber-300 hover:to-amber-400 text-purple-950 px-1.5 py-0.5 rounded text-[9px] font-cinzel font-bold flex items-center gap-0.5 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+                    title={isExpanded ? "Shrink to normal" : "Expand to full view"}
+                  >
+                    {isExpanded ? (
+                      <>
+                        <Minimize2 className="w-2.5 h-2.5" />
+                        <span>Normal</span>
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="w-2.5 h-2.5" />
+                        <span>Full View</span>
+                      </>
+                    )}
+                  </button>
+                )}
                 <a
                   href={driveDirectUrl}
                   target="_blank"
@@ -248,140 +263,6 @@ export default function MagicalVideoFrame({
           </div>
         </div>
       </div>
-
-      {/* ── Royal Theater Modal ─────────────────────────────────── */}
-      {isTheaterOpen && hasValidDriveId && typeof document !== 'undefined' && createPortal(
-        /* Full-screen black stage, portalled to body — zero CSS transforms */
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.97)', display: 'flex', flexDirection: 'column' }}
-          onClick={() => setIsTheaterOpen(false)}
-        >
-          {/* Header */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 16px', borderBottom: '1px solid rgba(253,224,71,0.2)',
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-              <div style={{ padding: 8, borderRadius: '50%', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)', flexShrink: 0 }}>
-                <Crown style={{ width: 18, height: 18, color: '#fbbf24', fill: '#fbbf24' }} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontWeight: 900, fontSize: 15, color: '#fde68a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {friendName}'s Birthday Wish
-                </div>
-                <div style={{ fontSize: 11, color: '#c4b5fd', textTransform: 'uppercase', letterSpacing: '0.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {role} · Royal Theater
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsTheaterOpen(false)}
-              style={{ padding: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: '#fde68a', flexShrink: 0, marginLeft: 8, display: 'flex', alignItems: 'center' }}
-              aria-label="Close"
-            >
-              <X style={{ width: 22, height: 22 }} />
-            </button>
-          </div>
-
-          {/* Video stage — takes all remaining height */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', minHeight: 0 }}
-          >
-            {/*
-              Theater clip box — the same desktop-override technique as inline.
-              THEATER_W×THEATER_H forces Google Drive to render its desktop player
-              (small, proportional controls). CSS scale shrinks it to fit the modal.
-              pointer-events are ENABLED here so the user can interact.
-            */}
-            <div
-              ref={theaterContainerRef}
-              style={{
-                width: isVertical ? 'min(85vw, 340px)' : '100%',
-                maxWidth: isVertical ? 340 : 900,
-                aspectRatio: isVertical ? '9/16' : '16/9',
-                maxHeight: isVertical ? '78vh' : '75vh',
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 12,
-                background: '#000',
-                boxShadow: '0 0 60px rgba(168,85,247,0.4)',
-                border: '1px solid rgba(251,191,36,0.35)',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  width: THEATER_W,
-                  height: THEATER_H,
-                  transform: `translate(-50%, -50%) scale(${theaterSize.w > 0 ? theaterScale : 1})`,
-                  transformOrigin: 'center center',
-                  // pointer-events intentionally left as default (auto) so user can interact
-                }}
-              >
-                <iframe
-                  src={driveEmbedUrl}
-                  title={`${friendName}'s Birthday Wish – Full Screen`}
-                  width={THEATER_W}
-                  height={THEATER_H}
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  style={{ border: 'none', display: 'block', width: '100%', height: '100%' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
-              padding: '10px 16px', gap: 8, borderTop: '1px solid rgba(253,224,71,0.2)', flexShrink: 0,
-            }}
-          >
-            <span style={{ fontSize: 11, fontFamily: 'Cinzel, serif', fontWeight: 700, color: 'rgba(253,224,71,0.8)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkles style={{ width: 13, height: 13, color: '#fbbf24' }} />
-              The Princess Chronicles
-            </span>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <a
-                href={driveDirectUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  padding: '6px 14px', borderRadius: 999,
-                  background: 'linear-gradient(to right,#fde68a,#fbbf24)', color: '#1e0a3c',
-                  fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: 11,
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  textDecoration: 'none', flexShrink: 0,
-                }}
-              >
-                Open in Drive App
-                <ExternalLink style={{ width: 12, height: 12 }} />
-              </a>
-              <button
-                onClick={() => setIsTheaterOpen(false)}
-                style={{
-                  padding: '6px 14px', borderRadius: 999,
-                  background: 'rgba(109,40,217,0.7)', color: '#ede9fe',
-                  border: '1px solid rgba(109,40,217,0.5)', cursor: 'pointer',
-                  fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: 11, flexShrink: 0,
-                }}
-              >
-                Back to Book
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
