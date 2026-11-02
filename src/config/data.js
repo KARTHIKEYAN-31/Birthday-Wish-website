@@ -145,6 +145,17 @@ export const BOOK_DATA = {
       quote: "“With every kind word and golden smile, friendship turns the simplest moments into a treasured fairytale.”",
       badge: "Chapter XII • The Radiant Bloom",
     },
+    {
+      id: 13,
+      name: "Karan",
+      title: "The Starlight Champion",
+      role: "Cherished Friend",
+      driveFileId: "1llgaeu4ImfxvI9fiQb2LVUrmiAfN0REh",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      orientation: "vertical",
+      quote: "“True friendship is an adventure of unwavering loyalty, bright laughter, and unforgettable chapters.”",
+      badge: "Chapter XIII • The Starlight Champion",
+    },
   ],
 
   // =========================================================================

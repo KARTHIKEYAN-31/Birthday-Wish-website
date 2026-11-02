@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Page from './Page';
@@ -33,13 +33,60 @@ const FADE_OUT_TIME = 240;  // ms for page content to disappear before book clos
 const FLIP_TIME = 800;      // ms for intermediate dual page turns
 const SPIN_TIME = 750;      // ms for direct 3D closed book flip (Cover <-> Finale)
 
+// Convert positive numbers to Roman numerals for fairytale chapter badges
+const toRoman = (num) => {
+  const lookup = [
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+  ];
+  let res = '';
+  let n = num;
+  for (const [v, r] of lookup) {
+    while (n >= v) {
+      res += r;
+      n -= v;
+    }
+  }
+  return res || 'XIV';
+};
+
+// Creates a regal Fairytale Greetings page to celebrate when page count is odd
+const createGreetingsPage = (pageNum, recipient = "Kavya") => ({
+  id: pageNum,
+  isGreetings: true,
+  name: "Royal Blessings",
+  title: "A Golden Year of Joy & Wonder",
+  role: "Heartfelt Wishes",
+  badge: `Chapter ${toRoman(pageNum)} • Golden Wishes`,
+  quote: "“May your days sparkle with joy, your heart overflow with peace, and every tomorrow be more wonderful than today.”",
+  wishes: [
+    `May this milestone chapter bring you endless laughter, peace, and beautiful new adventures, ${recipient}!`,
+    "Surrounded always by loving family and treasured friends who celebrate your radiant light.",
+    "Wishing you the very best health, boundless success, and a truly magical year ahead! ✨💖"
+  ]
+});
+
 export default function Book({ friendName }) {
-  const pages = BOOK_DATA.pages || [
+  const rawPages = BOOK_DATA.pages || [
     BOOK_DATA.page1,
     BOOK_DATA.page2,
     BOOK_DATA.page3,
     BOOK_DATA.page4,
   ];
+
+  const recipientName = friendName || BOOK_DATA.friendName || "Kavya";
+
+  // If the number of pages is odd, dynamically pair the last page with a royal greetings card
+  // instead of leaving an empty video placeholder!
+  const pages = useMemo(() => {
+    if (rawPages.length % 2 !== 0) {
+      const nextPageNum = rawPages.length + 1;
+      return [
+        ...rawPages,
+        createGreetingsPage(nextPageNum, recipientName),
+      ];
+    }
+    return rawPages;
+  }, [rawPages, recipientName]);
   
   const totalPages = pages.length;
   // Total dual-page spreads needed for desktop (e.g. 10 friends = 5 spreads)
@@ -171,14 +218,7 @@ export default function Book({ friendName }) {
       leftPageNumber: leftIdx + 1,
       leftFriend: pages[leftIdx],
       rightPageNumber: rightIdx + 1,
-      rightFriend: pages[rightIdx] || {
-        name: "Cherished Friend",
-        title: "Fairytale Companion",
-        role: "Friend",
-        message: "Wishing you a magical journey filled with endless laughter and memories!",
-        quote: "“Fairytales are real when shared with friends.”",
-        badge: "Royal Keepsake",
-      },
+      rightFriend: pages[rightIdx] || createGreetingsPage(rightIdx + 1, recipientName),
     };
   };
 

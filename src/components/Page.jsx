@@ -1,6 +1,6 @@
 import React from 'react';
 import MagicalVideoFrame from './MagicalVideoFrame';
-import { Heart, Sparkles } from 'lucide-react';
+import { Heart, Sparkles, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Page({
@@ -110,39 +110,95 @@ export default function Page({
           </div>
         </div>
 
-        {/* Center Content: Magical Video + Birthday Message / Quote */}
-        <div className="flex-1 flex flex-col justify-center space-y-2 max-w-xs mx-auto w-full">
-          <MagicalVideoFrame
-            driveFileId={friendData.driveFileId}
-            fallbackVideo={friendData.fallbackVideo}
-            friendName={friendData.name}
-            role={friendData.role}
-            orientation={friendData.orientation}
-            contentVisible={contentVisible}
-          />
-
-          {(friendData.message || friendData.quote) && (
-            <div className="space-y-1.5">
-              {/* Friend's Letter (only rendered if provided) */}
-              {friendData.message && (
-                <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-200/80 shadow-xs">
-                  <p className="text-xs md:text-sm font-serif text-purple-950 leading-relaxed text-center italic font-medium">
-                    "{friendData.message}"
-                  </p>
-                </div>
-              )}
-
-              {/* Fairytale Quote Card */}
-              {friendData.quote && (
-                <div className="p-2 rounded-lg bg-gradient-to-r from-purple-100/70 via-pink-50 to-purple-100/70 border-l-3 border-purple-500 text-center shadow-2xs">
-                  <p className="text-[10px] md:text-[11px] font-cormorant text-purple-950 font-bold italic">
-                    {friendData.quote}
-                  </p>
-                </div>
-              )}
+        {/* Center Content: Either Greetings Card or Magical Video + Quote */}
+        {friendData.isGreetings ? (
+          <div className="flex-1 flex flex-col justify-center items-center text-center px-1 py-1 space-y-2.5 max-w-xs mx-auto w-full">
+            {/* Crown Emblem */}
+            <div className="relative">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-300/40 via-purple-300/30 to-amber-400/40 border-2 border-amber-300/80 shadow-[0_0_20px_rgba(251,191,36,0.3)] flex items-center justify-center">
+                <Crown className="w-7 h-7 text-amber-500 fill-amber-400 drop-shadow-xs" />
+              </div>
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 absolute -top-1 -right-1 animate-pulse" />
+              <Sparkles className="w-3 h-3 text-amber-500 absolute -bottom-0.5 -left-1 animate-pulse" />
             </div>
-          )}
-        </div>
+
+            {/* Fairytale Greetings Card */}
+            <div className="w-full p-3.5 rounded-2xl bg-gradient-to-b from-purple-100/90 via-pink-50/90 to-purple-100/90 border border-purple-300/70 shadow-sm space-y-2">
+              <h3 className="font-cinzel font-bold text-xs sm:text-sm text-purple-950 tracking-wider">
+                Wishing You The Best Year Ahead ✨
+              </h3>
+
+              <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto" />
+
+              <div className="space-y-1.5 font-serif italic text-[11px] sm:text-xs leading-relaxed text-purple-950 font-medium">
+                {friendData.wishes ? (
+                  friendData.wishes.map((wish, idx) => (
+                    <p key={idx} className="text-purple-900/90">
+                      "{wish}"
+                    </p>
+                  ))
+                ) : (
+                  <>
+                    <p className="text-purple-900/90">
+                      "May this milestone year bring you the happiest adventures, warmest laughter, and peace in every moment."
+                    </p>
+                    <p className="text-purple-900/90">
+                      "Surrounded always by genuine hearts who cheer you on and celebrate your wonderful spirit."
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-1.5 border-t border-purple-200/80">
+                <p className="font-cinzel font-bold text-[10px] text-amber-800 tracking-wider uppercase">
+                  Have A Magical Year Ahead! 💖
+                </p>
+              </div>
+            </div>
+
+            {/* Fairytale Quote Card */}
+            {friendData.quote && (
+              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-100/70 via-pink-50 to-purple-100/70 border-l-3 border-purple-500 text-center shadow-2xs w-full">
+                <p className="text-[10px] md:text-[11px] font-cormorant text-purple-950 font-bold italic">
+                  {friendData.quote}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col justify-center space-y-2 max-w-xs mx-auto w-full">
+            <MagicalVideoFrame
+              driveFileId={friendData.driveFileId}
+              fallbackVideo={friendData.fallbackVideo}
+              friendName={friendData.name}
+              role={friendData.role}
+              orientation={friendData.orientation}
+              contentVisible={contentVisible}
+            />
+
+            {(friendData.message || friendData.quote) && (
+              <div className="space-y-1.5">
+                {/* Friend's Letter (only rendered if provided) */}
+                {friendData.message && (
+                  <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-200/80 shadow-xs">
+                    <p className="text-xs md:text-sm font-serif text-purple-950 leading-relaxed text-center italic font-medium">
+                      "{friendData.message}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Fairytale Quote Card */}
+                {friendData.quote && (
+                  <div className="p-2 rounded-lg bg-gradient-to-r from-purple-100/70 via-pink-50 to-purple-100/70 border-l-3 border-purple-500 text-center shadow-2xs">
+                    <p className="text-[10px] md:text-[11px] font-cormorant text-purple-950 font-bold italic">
+                      {friendData.quote}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Footer: Page Number & Direction */}
         <div className="flex items-center justify-between pt-1 border-t border-purple-300/40 text-[9px] text-purple-800/80 font-cinzel font-semibold">
