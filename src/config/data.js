@@ -48,7 +48,7 @@ export const BOOK_DATA = {
     },
     {
       id: 4,
-      name: "Sinthoori",
+      name: "Sindhu",
       title: "The Guardian of Sweet Memories",
       role: "Sister & Childhood Best Friend",
       driveFileId: "1fQvuhs4pSkVfdZmTyQXYLt5-u2kF2rVq",
