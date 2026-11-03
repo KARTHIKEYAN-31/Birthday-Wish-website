@@ -66,27 +66,34 @@ const createGreetingsPage = (pageNum, recipient = "Kavya") => ({
 });
 
 export default function Book({ friendName }) {
-  const rawPages = BOOK_DATA.pages || [
-    BOOK_DATA.page1,
-    BOOK_DATA.page2,
-    BOOK_DATA.page3,
-    BOOK_DATA.page4,
-  ];
-
   const recipientName = friendName || BOOK_DATA.friendName || "Kavya";
 
-  // If the number of pages is odd, dynamically pair the last page with a royal greetings card
+  // Filter out any pages that have hide set to true (or "yes")
+  const visiblePages = useMemo(() => {
+    const list = BOOK_DATA.pages || [
+      BOOK_DATA.page1,
+      BOOK_DATA.page2,
+      BOOK_DATA.page3,
+      BOOK_DATA.page4,
+    ];
+    return list.filter((page) => {
+      if (!page) return false;
+      return !(page.hide === true || page.hide === 'yes' || page.hide === 'true');
+    });
+  }, []);
+
+  // If the number of visible pages is odd, dynamically pair the last page with a royal greetings card
   // instead of leaving an empty video placeholder!
   const pages = useMemo(() => {
-    if (rawPages.length % 2 !== 0) {
-      const nextPageNum = rawPages.length + 1;
+    if (visiblePages.length % 2 !== 0) {
+      const nextPageNum = visiblePages.length + 1;
       return [
-        ...rawPages,
+        ...visiblePages,
         createGreetingsPage(nextPageNum, recipientName),
       ];
     }
-    return rawPages;
-  }, [rawPages, recipientName]);
+    return visiblePages;
+  }, [visiblePages, recipientName]);
   
   const totalPages = pages.length;
   // Total dual-page spreads needed for desktop (e.g. 10 friends = 5 spreads)

@@ -23,6 +23,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“No ocean is too vast, nor distance too far, to dim a father’s unconditional love for his cherished princess.”",
       badge: "Chapter I • The King's Blessing",
+      hide: false,
     },
     {
       id: 2,
@@ -34,6 +35,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“A mother's loving embrace is the enchanted sanctuary where all of a daughter’s dreams take flight.”",
       badge: "Chapter II • A Mother's Haven",
+      hide: false,
     },
     {
       id: 3,
@@ -45,6 +47,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“From childhood adventures to forever dreams, a brother’s loyalty and love stand unwavering.”",
       badge: "Chapter III • The Valiant Companion",
+      hide: false,
     },
     {
       id: 4,
@@ -56,6 +59,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“Always there at every turn of life—a cherished sister and childhood best friend whose presence is pure magic.”",
       badge: "Chapter IV • The Constant Star",
+      hide: false,
     },
     {
       id: 5,
@@ -67,6 +71,7 @@ export const BOOK_DATA = {
       orientation: "horizontal",
       quote: "“From childhood days to forever dreams, true friendship is a golden thread that never fades with time.”",
       badge: "Chapter V • Golden Echoes",
+      hide: true,
     },
     {
       id: 6,
@@ -78,6 +83,7 @@ export const BOOK_DATA = {
       orientation: "horizontal",
       quote: "“From dancing with pure joy at your wedding to celebrating every golden milestone, our bond dances on forever.”",
       badge: "Chapter VI • Celebration of Love",
+      hide: false,
     },
     {
       id: 7,
@@ -89,6 +95,7 @@ export const BOOK_DATA = {
       orientation: "horizontal",
       quote: "“We may quarrel and banter like playful storms, but in our hearts, we will never let each other fall.”",
       badge: "Chapter VII • The Unbreakable Bond",
+      hide: false,
     },
     {
       id: 8,
@@ -100,6 +107,7 @@ export const BOOK_DATA = {
       orientation: "horizontal",
       quote: "“A princess needs no guard when she has a squad that treasures and respects her as their truest buddy.”",
       badge: "Chapter VIII • The Royal Brigade",
+      hide: false,
     },
     {
       id: 9,
@@ -111,6 +119,7 @@ export const BOOK_DATA = {
       orientation: "horizontal",
       quote: "“Golden friends make every memory brighter and every chapter of life infinitely richer.”",
       badge: "Chapter IX • Starlight Companions",
+      hide: false,
     },
     {
       id: 10,
@@ -122,6 +131,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“True friendship is a beacon of light, bringing joy and warmth to every step of life’s royal journey.”",
       badge: "Chapter X • The Loyal Companion",
+      hide: true,
     },
     {
       id: 11,
@@ -133,6 +143,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“In the story of life, true friends are the bright stars that make every moment sparkle with magic.”",
       badge: "Chapter XI • The Knight of Smiles",
+      hide: false,
     },
     {
       id: 12,
@@ -144,6 +155,7 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“With every kind word and golden smile, friendship turns the simplest moments into a treasured fairytale.”",
       badge: "Chapter XII • The Radiant Bloom",
+      hide: false,
     },
     {
       id: 13,
@@ -155,6 +167,19 @@ export const BOOK_DATA = {
       orientation: "vertical",
       quote: "“True friendship is an adventure of unwavering loyalty, bright laughter, and unforgettable chapters.”",
       badge: "Chapter XIII • The Starlight Champion",
+      hide: true,
+    },
+    {
+      id: 14,
+      name: "Karthikeyan",
+      title: "The Loyal Companion of Joy",
+      role: "Best Friend",
+      driveFileId: "1DRAPoIhuvKf9D35yB_98Ljt2uRlkbpVS",
+      fallbackVideo: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      orientation: "horizontal",
+      quote: "“A true best friend is a timeless treasure, walking alongside you through every magical chapter of life.”",
+      badge: "Chapter XIV • The True Companion",
+      hide: false,
     },
   ],
 
